@@ -1,14 +1,13 @@
-#include "rtc.h"
-
 #include <zephyr/device.h>
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/logging/log.h>
 
-#include "ui.h"
+#include "app.h"
+#include "rtc.h"
 
 LOG_MODULE_REGISTER(rtc_module);
 
-static const struct device *rtc_dev = DEVICE_DT_GET(DT_NODELABEL(rv8263));
+static const struct device* rtc_dev = DEVICE_DT_GET(DT_NODELABEL(rv8263));
 
 static int rtc_schedule_next_minute_alarm(void) {
   struct rtc_time now;
@@ -60,7 +59,7 @@ static int rtc_schedule_next_minute_alarm(void) {
   return ret;
 }
 
-static void rtc_minute_alarm_cb(const struct device *dev, uint16_t id, void *user_data) {
+static void rtc_minute_alarm_cb(const struct device* dev, uint16_t id, void* user_data) {
   (void)dev;
   (void)id;
   (void)user_data;
@@ -80,7 +79,7 @@ int rtc_init(void) {
   return 0;
 }
 
-int rtc_time_get(struct rtc_time *time) {
+int rtc_time_get(struct rtc_time* time) {
   if (!device_is_ready(rtc_dev)) {
     return -ENODEV;
   }
@@ -94,7 +93,7 @@ int rtc_time_get(struct rtc_time *time) {
   return 0;
 }
 
-int rtc_time_set(const struct rtc_time *time) {
+int rtc_time_set(const struct rtc_time* time) {
   if (!device_is_ready(rtc_dev)) {
     return -ENODEV;
   }

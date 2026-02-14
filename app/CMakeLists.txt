@@ -44,6 +44,14 @@ else()
   message(WARNING "NotoSans_Condensed-Medium.ttf not found; skipping Vietnamese font generation")
 endif()
 add_compile_definitions(LV_LVGL_H_INCLUDE_SIMPLE)
+
+
+FILE(GLOB_RECURSE UI_Sources CONFIGURE_DEPENDS src/ui/*.c)
+
+include_directories(
+  /Users/phuc/Work/k_watch_fw/modules/lib/gui
+)
+
 target_sources(app PRIVATE
   src/main.c
   src/ble.c
@@ -54,10 +62,11 @@ target_sources(app PRIVATE
   src/ancs_client.c
   src/power.c
   src/display.c
-  src/ui.c
+  src/app.c
   src/watchface.c
   src/image_176x176_4bpp.c
   src/driver/LPM013M126A.c
   ${LVGL_FONT_SOURCES}
   ${LVGL_IMAGE_SOURCES}
+  ${UI_Sources}
 )

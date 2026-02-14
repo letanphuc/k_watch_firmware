@@ -1,0 +1,17 @@
+SET(SOURCES screens/ui_Screen1.c
+    screens/ui_Screen2.c
+    ui.c
+    components/ui_comp_hook.c
+    ui_helpers.c
+    images/ui_img_battery_status_4_png.c
+    images/ui_img_sun_png.c
+    images/ui_img_battery_status_0_png.c
+    images/ui_img_battery_status_1_png.c
+    images/ui_img_battery_status_2_png.c
+    images/ui_img_battery_status_3_png.c
+    images/ui_img_battery_status_5_png.c
+    images/ui_img_moon_png.c
+    fonts/ui_font_NotoSansCondensedMedium.c
+    fonts/ui_font_sevensegments.c)
+
+add_library(ui ${SOURCES})

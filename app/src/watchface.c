@@ -10,18 +10,18 @@ LOG_MODULE_REGISTER(watchface);
 #include "rtc.h"
 #include "watchface.h"
 
-static lv_obj_t *label_hour;
-static lv_obj_t *label_colon;
-static lv_obj_t *label_minute;
-static lv_obj_t *label_date;
-static lv_obj_t *icon_ampm;
-static lv_obj_t *date_labels[7];
-static lv_obj_t *cont;
-static lv_obj_t *row_time;
-static lv_obj_t *row_date;
-static lv_obj_t *row_matrix;
-static lv_obj_t *label_battery_percent;
-static lv_obj_t *battery_icon;
+static lv_obj_t* label_hour;
+static lv_obj_t* label_colon;
+static lv_obj_t* label_minute;
+static lv_obj_t* label_date;
+static lv_obj_t* icon_ampm;
+static lv_obj_t* date_labels[7];
+static lv_obj_t* cont;
+static lv_obj_t* row_time;
+static lv_obj_t* row_date;
+static lv_obj_t* row_matrix;
+static lv_obj_t* label_battery_percent;
+static lv_obj_t* battery_icon;
 LV_FONT_DECLARE(seven_segments_64);
 LV_FONT_DECLARE(font_vi_20);
 
@@ -43,7 +43,7 @@ extern const lv_image_dsc_t battery_status_5;
 extern const lv_image_dsc_t sun;
 extern const lv_image_dsc_t moon;
 
-const lv_image_dsc_t *battery_icons[] = {
+const lv_image_dsc_t* battery_icons[] = {
     &battery_status_0,  // empty
     &battery_status_1,  // 20%
     &battery_status_2,  // 40%
@@ -53,7 +53,7 @@ const lv_image_dsc_t *battery_icons[] = {
 };
 
 void watchface_init(void) {
-  lv_obj_t *scr = lv_scr_act();
+  lv_obj_t* scr = lv_scr_act();
   lv_obj_set_style_bg_color(scr, color_white, 0);
   lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
 
@@ -69,7 +69,7 @@ void watchface_init(void) {
   lv_obj_set_style_pad_bottom(cont, 8, 0);
 
   // Row 0: Battery status icon (right aligned, with percentage label)
-  lv_obj_t *row_battery = lv_obj_create(cont);
+  lv_obj_t* row_battery = lv_obj_create(cont);
   lv_obj_set_size(row_battery, 176, 56);
   lv_obj_set_style_bg_opa(row_battery, LV_OPA_TRANSP, 0);
   lv_obj_set_flex_flow(row_battery, LV_FLEX_FLOW_ROW);
@@ -96,7 +96,7 @@ void watchface_init(void) {
   lv_obj_set_flex_align(row_time, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
   // Hour label in red round rect, white text
-  lv_obj_t *hour_container = lv_obj_create(row_time);
+  lv_obj_t* hour_container = lv_obj_create(row_time);
   lv_obj_set_size(hour_container, 72, 60);
   lv_obj_set_style_bg_color(hour_container, color_red, 0);
   lv_obj_set_style_radius(hour_container, 8, 0);
@@ -152,7 +152,7 @@ void watchface_init(void) {
   lv_obj_set_flex_align(row_matrix, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
   // Date row only
-  lv_obj_t *date_row = lv_obj_create(row_matrix);
+  lv_obj_t* date_row = lv_obj_create(row_matrix);
   lv_obj_set_size(date_row, 176, 32);
   lv_obj_set_style_bg_opa(date_row, LV_OPA_TRANSP, 0);
   lv_obj_set_style_border_width(date_row, 0, 0);
@@ -172,7 +172,7 @@ void watchface_init(void) {
 extern uint32_t battery_percent;
 void watchface_update(void) {
   struct rtc_time time;
-  static const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  static const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
   if (rtc_time_get(&time) == 0) {
     lv_label_set_text_fmt(label_hour, "%02d", time.tm_hour);

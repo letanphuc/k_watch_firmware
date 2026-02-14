@@ -8,11 +8,11 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/poweroff.h>
 
+#include "app.h"
 #include "ble.h"
 #include "buttons.h"
 #include "power.h"
 #include "rtc.h"
-#include "ui.h"
 
 LOG_MODULE_REGISTER(main);
 
@@ -27,7 +27,7 @@ int main(void) {
     LOG_ERR("BLE init failed");
   }
 
-  if (ui_init() < 0) {
+  if (app_init() < 0) {
     LOG_ERR("UI init failed");
   }
 
@@ -36,9 +36,11 @@ int main(void) {
   }
 
   while (1) {
-    uint32_t next_lvgl_timer = ui_task_handler();
+    uint32_t next_lvgl_timer = app_task_handler();
+    if (next_lvgl_timer > 1000) {
+      next_lvgl_timer = 1000;  // Cap to 1s to ensure timely updates
+    }
     k_sem_take(&lvgl_refresh_sem, K_MSEC(next_lvgl_timer));
-    ui_watchface_update();
   }
   return 0;
 }
