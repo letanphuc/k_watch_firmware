@@ -1,0 +1,6 @@
+board:
+  name: k_watch
+  full_name: K Watch
+  vendor: k_watch
+  socs:
+    - name: nrf52840

@@ -1,0 +1,12 @@
+#ifndef IMAGE_176X176_4BPP_H
+#define IMAGE_176X176_4BPP_H
+
+#include <stdint.h>
+
+#define IMAGE_176X176_4BPP_WIDTH 176
+#define IMAGE_176X176_4BPP_HEIGHT 176
+#define IMAGE_176X176_4BPP_SIZE 15488
+
+extern const uint8_t image_176x176_4bpp[IMAGE_176X176_4BPP_SIZE];
+
+#endif

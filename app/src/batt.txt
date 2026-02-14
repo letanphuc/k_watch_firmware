@@ -1,0 +1,8 @@
+[00:03:37.763,824] <inf> power: IBAT: 0.000000 A
+[00:03:37.763,854] <inf> power: NTC Temp: 25.000000 C
+[00:03:37.763,854] <inf> power: Die Temp: 30.074000 C
+[00:03:37.763,854] <inf> power: Battery: 67%
+[00:03:37.763,885] <inf> power: Charger status: 0x00
+[00:03:37.763,885] <inf> power: Charger error: 0x00
+[00:03:37.763,885] <inf> power: VBUS status: 0x0c
+

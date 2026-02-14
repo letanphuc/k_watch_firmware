@@ -1,0 +1,219 @@
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
+#include "k_watch-pinctrl.dtsi"
+#include <zephyr/dt-bindings/led/led.h>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/pwm/pwm.h>
+
+/ {
+	model = "K Watch";
+	compatible = "k_watch,k-watch";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot0_partition;
+	};
+
+	aliases {
+		led-strip = &led_strip;
+		dpbl = &dp_bl;
+		dpext = &dp_ext;
+		dpon = &dp_on;
+		dpcs = &dp_cs;
+	};
+
+	display_ctrl {
+		compatible = "gpio-leds";
+		dp_ext: dp_ext {
+			gpios = <&gpio0 14 GPIO_ACTIVE_HIGH>;
+		};
+
+		dp_on: dp_on {
+			gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
+		};
+
+		dp_cs: dp_cs {
+			gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+		dp_bl: dp_bl {
+			pwms = <&pwm0 0 PWM_MSEC(1) PWM_POLARITY_INVERTED>;
+		};
+	};
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+/ {
+	buttons {
+		compatible = "gpio-keys";
+		button0: button_0 {
+			gpios = <&gpio0 31 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Button 0";
+		};
+		button1: button_1 {
+			gpios = <&gpio1 10 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Button 1";
+		};
+		button2: button_2 {
+			gpios = <&gpio1 12 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Button 2";
+		};
+		button3: button_3 {
+			gpios = <&gpio1 02 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Button 3";
+		};
+	};
+
+	aliases {
+		sw0 = &button0;
+		sw1 = &button1;
+		sw2 = &button2;
+		sw3 = &button3;
+	};
+
+	chosen {
+		zephyr,display = &dummy_dc;
+	};
+
+	dummy_dc: dummy_dc {
+		compatible = "zephyr,dummy-dc";
+		height = <176>;
+		width = <176>;
+	};
+};
+
+&i2c0 {
+	compatible = "nordic,nrf-twim";
+	status = "okay";
+	pinctrl-0 = <&i2c0_default>;
+	pinctrl-1 = <&i2c0_sleep>;
+	pinctrl-names = "default", "sleep";
+
+	rv8263: rv8263@51 {
+		status = "okay";
+		compatible = "microcrystal,rv-8263-c8";
+		reg = <0x51>;
+		int-gpios = <&gpio1 1 GPIO_PULL_UP>;
+		clkout = <4096>;
+	};
+
+	pmic_main: npm1300@6b {
+		compatible = "nordic,npm1300";
+		reg = <0x6b>;
+
+		pmic_charger: charger {
+			compatible = "nordic,npm1300-charger";
+			term-microvolt = <4150000>;
+			term-warm-microvolt = <4000000>;
+			current-microamp = <150000>;
+			dischg-limit-microamp = <1000000>;
+			vbus-limit-microamp = <500000>;
+			thermistor-ohms = <10000>;
+			thermistor-beta = <3380>;
+			charging-enable;
+		};
+
+		regulators {
+			compatible = "nordic,npm1300-regulator";
+
+			BUCK1 {
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-boot-on;
+			};
+
+			BUCK2 {
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-boot-on;
+			};
+		};
+	};
+};
+
+&spi3 {
+	compatible = "nordic,nrf-spim";
+	status = "okay";
+	pinctrl-0 = <&spi3_default>;
+	pinctrl-1 = <&spi3_sleep>;
+	pinctrl-names = "default", "sleep";
+
+	led_strip: ws2812@0 {
+		compatible = "worldsemi,ws2812-spi";
+		reg = <0>;
+		spi-max-frequency = <4000000>;
+		chain-length = <1>;
+		color-mapping = <LED_COLOR_ID_GREEN
+				 LED_COLOR_ID_RED
+				 LED_COLOR_ID_BLUE>;
+		spi-one-frame = <0x70>;
+		spi-zero-frame = <0x40>;
+	};
+};
+
+
+&spi1 {
+	compatible = "nordic,nrf-spim";
+	status = "okay";
+	pinctrl-0 = <&spi1_default>;
+	pinctrl-1 = <&spi1_sleep>;
+	pinctrl-names = "default", "sleep";
+	/delete-property/ cs-gpios;
+
+	lpm013m126a: lpm013m126a@0 {
+		compatible = "vnd,spi-device";
+		reg = <0>;
+		label = "LPM013M126A";
+		spi-max-frequency = <1000000>;
+	};
+};
+
+&pwm0 {
+	status = "okay";
+	pinctrl-0 = <&pwm0_default>;
+	pinctrl-1 = <&pwm0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 DT_SIZE_K(48)>;
+		};
+
+		slot0_partition: partition@c000 {
+			label = "image-0";
+			reg = <0x0000c000 DT_SIZE_K(472)>;
+		};
+
+		slot1_partition: partition@82000 {
+			label = "image-1";
+			reg = <0x00082000 DT_SIZE_K(472)>;
+		};
+
+		storage_partition: partition@f8000 {
+			label = "storage";
+			reg = <0x000f8000 DT_SIZE_K(32)>;
+		};
+	};
+};
