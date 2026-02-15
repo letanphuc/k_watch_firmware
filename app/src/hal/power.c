@@ -9,6 +9,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
+#include "app.h"
+
 LOG_MODULE_REGISTER(power);
 
 #define PMIC_CHARGER_NODE DT_NODELABEL(pmic_charger)
@@ -109,6 +111,13 @@ static void power_report_handler(struct k_work* work) {
             (int)(sensor_value_to_float_local(&data.ibat) * 1000.0f), (long long)frac_abs(data.ibat.val2 / 1000),
             data.vbat.val1, frac_abs(data.vbat.val2 / 1000), data.vbus_status.val1, data.charger_status.val1);
     battery_percent = data.battery_percent;
+
+    app_event_t event = {
+        .type = APP_EVENT_BATTERY,
+        .value = data.battery_percent,
+        .len = 0,
+    };
+    app_event_post(&event);
   }
   k_work_reschedule(&power_report_work, K_MINUTES(1));
 }
@@ -200,25 +209,4 @@ int power_read(struct power_data* data) {
   }
 
   return 0;
-}
-
-void power_test(void) {
-  struct power_data data;
-
-  if (power_init() < 0) {
-    return;
-  }
-
-  if (power_read(&data) < 0) {
-    return;
-  }
-
-  LOG_INF("VBAT: %d.%06d V", data.vbat.val1, frac_abs(data.vbat.val2));
-  LOG_INF("IBAT: %d.%06d A", data.ibat.val1, frac_abs(data.ibat.val2));
-  LOG_INF("NTC Temp: %d.%06d C", data.ntc_temp.val1, frac_abs(data.ntc_temp.val2));
-  LOG_INF("Die Temp: %d.%06d C", data.die_temp.val1, frac_abs(data.die_temp.val2));
-  LOG_INF("Battery: %u%%", data.battery_percent);
-  LOG_INF("Charger status: 0x%02x", data.charger_status.val1);
-  LOG_INF("Charger error: 0x%02x", data.charger_error.val1);
-  LOG_INF("VBUS status: 0x%02x", data.vbus_status.val1);
 }

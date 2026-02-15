@@ -31,7 +31,7 @@ static const struct bt_data sd[] = {
     BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
 };
 
-static void adv_work_handler(struct k_work *work) {
+static void adv_work_handler(struct k_work* work) {
   int err;
 
   ARG_UNUSED(work);
@@ -47,7 +47,7 @@ static void adv_work_handler(struct k_work *work) {
 
 static void advertising_start(void) { k_work_submit(&adv_work); }
 
-static void connected(struct bt_conn *conn, uint8_t err) {
+static void connected(struct bt_conn* conn, uint8_t err) {
   char addr[BT_ADDR_LE_STR_LEN];
   int sec_err;
 
@@ -65,7 +65,7 @@ static void connected(struct bt_conn *conn, uint8_t err) {
   }
 }
 
-static void disconnected(struct bt_conn *conn, uint8_t reason) {
+static void disconnected(struct bt_conn* conn, uint8_t reason) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -74,7 +74,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason) {
   advertising_start();
 }
 
-static void security_changed(struct bt_conn *conn, bt_security_t level, enum bt_security_err err) {
+static void security_changed(struct bt_conn* conn, bt_security_t level, enum bt_security_err err) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -98,7 +98,7 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
     .recycled = recycled_cb,
 };
 
-static void auth_cancel(struct bt_conn *conn) {
+static void auth_cancel(struct bt_conn* conn) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -108,7 +108,7 @@ static void auth_cancel(struct bt_conn *conn) {
   bt_conn_disconnect(conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
 }
 
-static void pairing_complete(struct bt_conn *conn, bool bonded) {
+static void pairing_complete(struct bt_conn* conn, bool bonded) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -116,7 +116,7 @@ static void pairing_complete(struct bt_conn *conn, bool bonded) {
   LOG_INF("Pairing completed: %s, bonded: %d", addr, bonded);
 }
 
-static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason) {
+static void pairing_failed(struct bt_conn* conn, enum bt_security_err reason) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));

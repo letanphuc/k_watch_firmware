@@ -21,7 +21,7 @@ static uint8_t disp_buf[(LCD_DISP_WIDTH / 2) * LCD_DISP_HEIGHT]; /* 88 * 176 */
 /* ===================================== Helpers ===================================== */
 
 /* Set IO level to 'active' or 'inactive' based on dt_flags (ACTIVE_LOW/HIGH)  */
-static inline void gpio_set_active(const struct gpio_dt_spec *s, bool active) {
+static inline void gpio_set_active(const struct gpio_dt_spec* s, bool active) {
   if (!device_is_ready(s->port)) return;
   const bool is_active_low = (s->dt_flags & GPIO_ACTIVE_LOW);
   gpio_pin_set_dt(s, active ? (is_active_low ? 0 : 1) : (is_active_low ? 1 : 0));
@@ -31,8 +31,8 @@ static inline void gpio_set_active(const struct gpio_dt_spec *s, bool active) {
 static inline void cs_set_active(bool active) { gpio_set_active(&dp_cs, active); }
 
 /* Write 1 buffer in fixed MSB-first mode */
-static int spi_write_bytes(const uint8_t *buf, size_t len, struct spi_config *io_cfg) {
-  struct spi_buf sb = {.buf = (void *)buf, .len = len};
+static int spi_write_bytes(const uint8_t* buf, size_t len, struct spi_config* io_cfg) {
+  struct spi_buf sb = {.buf = (void*)buf, .len = len};
   struct spi_buf_set tx = {.buffers = &sb, .count = 1};
   return spi_write(lcd_spi.bus, io_cfg, &tx);
 }
@@ -44,7 +44,7 @@ static inline void extcomin_toggle(void) {
   gpio_pin_set_dt(&dp_ext, ext_state ? 1 : 0);
 }
 
-static int spi_packet_mixed(const uint8_t *msb, size_t msb_len, const uint8_t *lsb, size_t lsb_len,
+static int spi_packet_mixed(const uint8_t* msb, size_t msb_len, const uint8_t* lsb, size_t lsb_len,
                             uint32_t cs_setup_us, uint32_t cs_hold_us) {
   cs_set_active(true);
   k_busy_wait(cs_setup_us); /* giống Arduino: CS lên -> 6us -> clock */

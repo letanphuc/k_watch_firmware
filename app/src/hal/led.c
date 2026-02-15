@@ -20,27 +20,27 @@ static const struct led_rgb colors[] = {
     RGB(0x00, 0x00, LED_BRIGHTNESS), /* blue */
 };
 
-int led_test(void) {
+int led_init(void) {
   if (!device_is_ready(strip)) {
     LOG_ERR("LED strip device %s is not ready", strip->name);
     return -ENODEV;
   }
-
   LOG_INF("LED strip device %s ready", strip->name);
+  return 0;
+}
 
-  for (size_t i = 0; i < ARRAY_SIZE(colors); i++) {
-    pixels[0] = colors[i];
-    int rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
-    if (rc) {
-      LOG_ERR("couldn't update strip: %d", rc);
-    }
-    LOG_INF("Color %d", i);
-    k_sleep(K_MSEC(1000));
+int led_set_color(uint8_t r, uint8_t g, uint8_t b) {
+  if (!device_is_ready(strip)) {
+    return -ENODEV;
   }
 
-  /* Turn off */
-  memset(pixels, 0, sizeof(pixels));
-  led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  struct led_rgb color = RGB(r, g, b);
+  pixels[0] = color;
 
+  int rc = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+  if (rc) {
+    LOG_ERR("couldn't update strip: %d", rc);
+    return rc;
+  }
   return 0;
 }

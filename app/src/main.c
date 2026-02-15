@@ -36,11 +36,7 @@ int main(void) {
   }
 
   while (1) {
-    uint32_t next_lvgl_timer = app_task_handler();
-    if (next_lvgl_timer > 1000) {
-      next_lvgl_timer = 1000;  // Cap to 1s to ensure timely updates
-    }
-    k_sem_take(&lvgl_refresh_sem, K_MSEC(next_lvgl_timer));
+    app_task_handler();
   }
   return 0;
 }

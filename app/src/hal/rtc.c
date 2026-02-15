@@ -1,9 +1,10 @@
+#include "rtc.h"
+
 #include <zephyr/device.h>
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/logging/log.h>
 
 #include "app.h"
-#include "rtc.h"
 
 LOG_MODULE_REGISTER(rtc_module);
 
@@ -65,7 +66,11 @@ static void rtc_minute_alarm_cb(const struct device* dev, uint16_t id, void* use
   (void)user_data;
 
   LOG_INF("RTC minute alarm");
-  k_sem_give(&lvgl_refresh_sem);
+  app_event_t event = {
+      .type = APP_EVENT_RTC_ALARM,
+      .len = 0,
+  };
+  app_event_post(&event);
   rtc_schedule_next_minute_alarm();
 }
 
@@ -94,6 +99,8 @@ int rtc_time_get(struct rtc_time* time) {
 }
 
 int rtc_time_set(const struct rtc_time* time) {
+  LOG_INF("Setting RTC time: %04d-%02d-%02d %02d:%02d:%02d", time->tm_year + 1900, time->tm_mon + 1, time->tm_mday,
+          time->tm_hour, time->tm_min, time->tm_sec);
   if (!device_is_ready(rtc_dev)) {
     return -ENODEV;
   }

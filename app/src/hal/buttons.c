@@ -3,7 +3,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "driver/LPM013M126A.h"
+#include "app.h"
 
 LOG_MODULE_REGISTER(buttons);
 
@@ -29,23 +29,16 @@ static const char* button_labels[NUM_BUTTONS] = {
     BUTTON_LABEL(2),
     BUTTON_LABEL(3),
 };
-uint32_t current_brightness = 0;
+
 static void button_pressed(const struct device* dev, struct gpio_callback* cb, uint32_t pins) {
   for (int i = 0; i < NUM_BUTTONS; i++) {
-    if (pins & BIT(buttons[i].pin)) {
-      LOG_INF("%s pressed", button_labels[i]);
-      if (i == 0) {
-        // Button 1: Toggle brightness between 0 and 100%
-        if (current_brightness < 100) {
-          current_brightness += 10;
-        }
-      } else if (i == 2) {
-        if (current_brightness > 0) {
-          current_brightness -= 10;
-        }
-      }
-      LOG_INF("Setting brightness to %d%%", current_brightness);
-      cmlcd_backlight_set(100 - current_brightness);
+    if (cb == &button_cb_data[i]) {
+      app_event_t event = {
+          .type = APP_EVENT_BUTTON,
+          .value = i,
+          .len = 0,
+      };
+      app_event_post(&event);
     }
   }
 }

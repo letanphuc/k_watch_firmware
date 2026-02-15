@@ -6,17 +6,18 @@
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/uuid.h>
+#include <zephyr/drivers/rtc.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "rtc.h"
+#include "app.h"
 
 LOG_MODULE_REGISTER(app_cts_client);
 
 static struct bt_cts_client cts_c;
 static bool has_cts;
 
-static bool cts_to_rtc_time(const struct bt_cts_current_time *cts, struct rtc_time *out) {
+static bool cts_to_rtc_time(const struct bt_cts_current_time* cts, struct rtc_time* out) {
   uint8_t dow;
 
   if ((cts->exact_time_256.year == 0) || (cts->exact_time_256.month == 0) || (cts->exact_time_256.day == 0)) {
@@ -40,37 +41,44 @@ static bool cts_to_rtc_time(const struct bt_cts_current_time *cts, struct rtc_ti
   return true;
 }
 
-static void apply_current_time(const struct bt_cts_current_time *current_time) {
+static void apply_current_time(const struct bt_cts_current_time* current_time) {
   struct rtc_time rtc;
-  int err;
 
   if (!cts_to_rtc_time(current_time, &rtc)) {
     LOG_WRN("CTS time invalid");
     return;
   }
 
-  err = rtc_time_set(&rtc);
-  if (err) {
-    LOG_ERR("RTC set failed: %d", err);
+  struct rtc_time* time_ptr = k_malloc(sizeof(struct rtc_time));
+  if (!time_ptr) {
+    LOG_ERR("Failed to allocate memory for CTS time");
     return;
   }
+  *time_ptr = rtc;
 
-  LOG_INF("RTC synced: %04d-%02d-%02d %02d:%02d:%02d", rtc.tm_year + 1900, rtc.tm_mon + 1, rtc.tm_mday, rtc.tm_hour,
-          rtc.tm_min, rtc.tm_sec);
+  app_event_t event = {
+      .type = APP_EVENT_BLE_CTS,
+      .ptr = time_ptr,
+      .len = sizeof(struct rtc_time),
+  };
+  app_event_post(&event);
+
+  LOG_INF("CTS event posted");
 }
 
-static void notify_current_time_cb(struct bt_cts_client *cts, struct bt_cts_current_time *current_time) {
+static void notify_current_time_cb(struct bt_cts_client* cts, struct bt_cts_current_time* current_time) {
   ARG_UNUSED(cts);
   apply_current_time(current_time);
 }
 
-static void read_current_time_cb(struct bt_cts_client *cts, struct bt_cts_current_time *current_time, int err) {
+static void read_current_time_cb(struct bt_cts_client* cts, struct bt_cts_current_time* current_time, int err) {
   ARG_UNUSED(cts);
 
   if (err) {
     LOG_ERR("CTS read failed: %d", err);
     return;
   }
+  LOG_INF("CTS initial read complete, applying time");
 
   apply_current_time(current_time);
 }
@@ -94,7 +102,7 @@ static void enable_notifications(void) {
   }
 }
 
-static void discover_completed_cb(struct bt_gatt_dm *dm, void *ctx) {
+static void discover_completed_cb(struct bt_gatt_dm* dm, void* ctx) {
   int err;
 
   ARG_UNUSED(ctx);
@@ -123,14 +131,14 @@ static void discover_completed_cb(struct bt_gatt_dm *dm, void *ctx) {
   }
 }
 
-static void discover_service_not_found_cb(struct bt_conn *conn, void *ctx) {
+static void discover_service_not_found_cb(struct bt_conn* conn, void* ctx) {
   ARG_UNUSED(conn);
   ARG_UNUSED(ctx);
 
   LOG_WRN("CTS not found");
 }
 
-static void discover_error_found_cb(struct bt_conn *conn, int err, void *ctx) {
+static void discover_error_found_cb(struct bt_conn* conn, int err, void* ctx) {
   ARG_UNUSED(conn);
   ARG_UNUSED(ctx);
 
@@ -143,7 +151,7 @@ static const struct bt_gatt_dm_cb discover_cb = {
     .error_found = discover_error_found_cb,
 };
 
-static void connected(struct bt_conn *conn, uint8_t err) {
+static void connected(struct bt_conn* conn, uint8_t err) {
   if (err) {
     return;
   }
@@ -156,7 +164,7 @@ static void connected(struct bt_conn *conn, uint8_t err) {
   }
 }
 
-static void security_changed(struct bt_conn *conn, bt_security_t level, enum bt_security_err err) {
+static void security_changed(struct bt_conn* conn, bt_security_t level, enum bt_security_err err) {
   if (!err) {
     enable_notifications();
   }
