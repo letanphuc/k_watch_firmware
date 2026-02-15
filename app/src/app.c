@@ -1,5 +1,3 @@
-#include "app.h"
-
 #include <lvgl.h>
 #include <stdint.h>
 #include <sys/_stdint.h>
@@ -7,8 +5,10 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/util.h>
 
+#include "app.h"
 #include "display/lv_display.h"
 #include "driver/LPM013M126A.h"
+#include "hal/ancs_client.h"
 #include "misc/lv_color.h"
 #include "rtc.h"
 #include "ui/ui.h"
@@ -178,6 +178,8 @@ static void event_handle_ble_cts(app_event_t* event) {
     event_handle_rtc_alarm(event);
   }
   if (event->ptr) {
+    ancs_noti_info_t* info = (ancs_noti_info_t*)event->ptr;
+    LOG_INF("ANCS Notification: app=%s, title=%s, message=%s", info->app, info->title, info->message);
     k_free(event->ptr);
   }
 }

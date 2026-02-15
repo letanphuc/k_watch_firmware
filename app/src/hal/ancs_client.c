@@ -7,8 +7,8 @@
 #include "ancs_client.h"
 
 #include <bluetooth/gatt_dm.h>
-#include <bluetooth/services/ancs_client.h>
 #include <bluetooth/services/gattp.h>
+#include <stdint.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
@@ -16,15 +16,12 @@
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/atomic.h>
 #include <zephyr/sys/byteorder.h>
-#include <zephyr/sys/printk.h>
 
 #include "app.h"
 
 LOG_MODULE_REGISTER(app_ancs_client);
-
-/* Allocated size for attribute data. */
-#define ATTR_DATA_SIZE BT_ANCS_ATTR_DATA_MAX
 
 enum { DISCOVERY_ANCS_ONGOING, DISCOVERY_ANCS_SUCCEEDED, SERVICE_CHANGED_INDICATED };
 
@@ -270,32 +267,51 @@ static void app_attr_print(const struct bt_ancs_attr* attr) {
 
 static void bt_ancs_notification_source_handler(struct bt_ancs_client* ancs_c, int err,
                                                 const struct bt_ancs_evt_notif* notif) {
-  if (!err) {
+  if (!err && notif->evt_id == BT_ANCS_EVENT_ID_NOTIFICATION_ADDED) {
     notification_latest = *notif;
     notif_print(&notification_latest);
 
-    struct bt_ancs_evt_notif* notif_ptr = k_malloc(sizeof(struct bt_ancs_evt_notif));
-    if (notif_ptr) {
-      *notif_ptr = *notif;
-      app_event_t event = {
-          .type = APP_EVENT_BLE_ANCS,
-          .ptr = notif_ptr,
-          .len = sizeof(struct bt_ancs_evt_notif),
-      };
-      app_event_post(&event);
-    } else {
-      LOG_ERR("Failed to allocate memory for ANCS notification");
+    // Request notification attributes (content) for the new notification
+    int req_err = bt_ancs_request_attrs(ancs_c, notif, NULL);
+    if (req_err) {
+      LOG_ERR("Failed to request notification attributes (err %d)\n", req_err);
     }
+    // Do not emit any event here
   }
 }
 
 static void bt_ancs_data_source_handler(struct bt_ancs_client* ancs_c, const struct bt_ancs_attr_response* response) {
+  static ancs_noti_info_t noti_info;
   switch (response->command_id) {
     case BT_ANCS_COMMAND_ID_GET_NOTIF_ATTRIBUTES:
       notif_attr_latest = response->attr;
       notif_attr_print(&notif_attr_latest);
       if (response->attr.attr_id == BT_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER) {
         notif_attr_app_id_latest = response->attr;
+        strncpy(noti_info.app, (char*)response->attr.attr_data, ATTR_DATA_SIZE - 1);
+        noti_info.app[ATTR_DATA_SIZE - 1] = '\0';
+      } else if (response->attr.attr_id == BT_ANCS_NOTIF_ATTR_ID_TITLE) {
+        strncpy(noti_info.title, (char*)response->attr.attr_data, ATTR_DATA_SIZE - 1);
+        noti_info.title[ATTR_DATA_SIZE - 1] = '\0';
+      } else if (response->attr.attr_id == BT_ANCS_NOTIF_ATTR_ID_MESSAGE) {
+        strncpy(noti_info.message, (char*)response->attr.attr_data, ATTR_DATA_SIZE - 1);
+        noti_info.message[ATTR_DATA_SIZE - 1] = '\0';
+      }
+      // Post event after all three important fields are received
+      if (noti_info.title[0] != '\0' && noti_info.message[0] != '\0' && noti_info.app[0] != '\0') {
+        ancs_noti_info_t* info_ptr = k_malloc(sizeof(ancs_noti_info_t));
+        if (info_ptr) {
+          *info_ptr = noti_info;
+          app_event_t event = {
+              .type = APP_EVENT_BLE_ANCS,
+              .ptr = info_ptr,
+              .len = sizeof(ancs_noti_info_t),
+          };
+          app_event_post(&event);
+        } else {
+          LOG_ERR("Failed to allocate memory for ANCS notification info\n");
+        }
+        memset(&noti_info, 0, sizeof(noti_info));
       }
       break;
 
