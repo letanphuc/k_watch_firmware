@@ -1,0 +1,32 @@
+#Copyright(c) 2024 Nordic Semiconductor ASA
+#SPDX - License - Identifier : Apache - 2.0
+
+menuconfig HAPTICS
+	bool "Haptics drivers"
+	help
+	  Enable haptics drivers.
+
+if HAPTICS
+
+config HAPTICS_LOG_LEVEL
+	int "Log level"
+	default 3
+	help
+	  Log level for haptics drivers.
+
+config HAPTICS_INIT_PRIORITY
+	int "Init priority"
+	default 80
+	help
+	  Haptics driver initialization priority.
+
+config DRV2603
+	bool "DRV2603 haptic driver"
+	default y
+	depends on DT_HAS_TI_DRV2603_ENABLED
+	select PWM
+	select GPIO
+	help
+	  Enable DRV2603 haptic driver.
+
+endif # HAPTICS

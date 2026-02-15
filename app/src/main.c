@@ -11,6 +11,7 @@
 #include "app.h"
 #include "ble.h"
 #include "buttons.h"
+#include "hal/vib.h"
 #include "power.h"
 #include "rtc.h"
 
@@ -30,6 +31,8 @@ int main(void) {
   if (app_init() < 0) {
     LOG_ERR("UI init failed");
   }
+
+  vib_start(100, 2000);
 
   if (rtc_minute_alarm_enable() < 0) {
     LOG_ERR("RTC minute alarm init failed");

@@ -22,6 +22,7 @@ target_sources(app PRIVATE
   src/hal/cts_client.c
   src/hal/ancs_client.c
   src/hal/power.c
+  src/hal/vib.c
   src/app.c
   src/app/model.c
   src/app/screens/watchface_screen.c

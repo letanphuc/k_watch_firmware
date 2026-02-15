@@ -1,0 +1,19 @@
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+description: TI DRV2603 Haptic Driver
+
+compatible: "ti,drv2603"
+
+include: base.yaml
+
+properties:
+  en-gpios:
+    type: phandle-array
+    required: true
+    description: Enable GPIO pin
+
+  pwms:
+    type: phandle-array
+    required: true
+    description: PWM pin for intensity control
