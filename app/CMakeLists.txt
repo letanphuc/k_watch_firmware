@@ -23,6 +23,9 @@ target_sources(app PRIVATE
   src/hal/ancs_client.c
   src/hal/power.c
   src/app.c
+  src/app/model.c
+  src/app/screens/watchface_screen.c
+  src/app/screens/noti_screen.c
   src/driver/LPM013M126A.c
   ${LVGL_FONT_SOURCES}
   ${LVGL_IMAGE_SOURCES}

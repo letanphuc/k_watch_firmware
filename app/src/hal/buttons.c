@@ -38,6 +38,7 @@ static void button_pressed(const struct device* dev, struct gpio_callback* cb, u
           .value = i,
           .len = 0,
       };
+      LOG_INF("%s / %d pressed", button_labels[i], i);
       app_event_post(&event);
     }
   }

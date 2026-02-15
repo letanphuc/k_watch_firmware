@@ -1,0 +1,57 @@
+#include "model.h"
+
+#include <string.h>
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(model);
+
+static ancs_noti_info_t notifications[MAX_NOTIFICATIONS];
+static uint8_t noti_count = 0;
+static uint8_t head = 0;  // Index for the next new notification
+
+void model_add_notification(const ancs_noti_info_t* noti) {
+  if (noti == NULL) {
+    return;
+  }
+
+  LOG_INF("Adding notification: %s - %s - %s", noti->title, noti->message, noti->app);
+
+  // Copy notification to the current head
+  LOG_INF("Copying notification to head: %d", head);
+  memcpy(&notifications[head], noti, sizeof(ancs_noti_info_t));
+
+  // Update head (circularly)
+  head = (head + 1) % MAX_NOTIFICATIONS;
+  LOG_INF("Updated head to: %d", head);
+
+  // Update count (up to MAX)
+  if (noti_count < MAX_NOTIFICATIONS) {
+    noti_count++;
+  }
+  LOG_INF("Updated noti_count to: %d", noti_count);
+}
+
+uint8_t model_get_notification_count(void) { return noti_count; }
+
+const ancs_noti_info_t* model_get_notification(uint8_t index) {
+  if (index >= noti_count) {
+    return NULL;
+  }
+
+  // Browsing should probably be in reverse order (most recent first)
+  // Most recent is at (head - 1 + MAX) % MAX
+  // Second most recent at (head - 2 + MAX) % MAX
+  int8_t target_idx = (int8_t)head - 1 - index;
+  while (target_idx < 0) {
+    target_idx += MAX_NOTIFICATIONS;
+  }
+
+  return &notifications[target_idx];
+}
+
+void model_dump_notifications(void) {
+  for (int i = 0; i < noti_count; i++) {
+    const ancs_noti_info_t* n = model_get_notification(i);
+    LOG_INF("Notification %d: %s - %s - %s", i, n->title, n->message, n->app);
+  }
+}
