@@ -6,7 +6,7 @@
 #include "../ui.h"
 
 lv_obj_t *uic_batteryIcon;
-lv_obj_t *ui_Screen1 = NULL;lv_obj_t *ui_Container2 = NULL;lv_obj_t *ui_batteryIcon = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_TimeContainer = NULL;lv_obj_t *ui_HourLabel = NULL;lv_obj_t *ui_Label4 = NULL;lv_obj_t *ui_MinuteLabel = NULL;lv_obj_t *ui_Container3 = NULL;lv_obj_t *ui_Image2 = NULL;lv_obj_t *ui_Label6 = NULL;lv_obj_t *ui_Container4 = NULL;lv_obj_t *ui_day1 = NULL;lv_obj_t *ui_day2 = NULL;lv_obj_t *ui_day3 = NULL;lv_obj_t *ui_day4 = NULL;lv_obj_t *ui_day5 = NULL;lv_obj_t *ui_day6 = NULL;lv_obj_t *ui_day7 = NULL;
+lv_obj_t *ui_Screen1 = NULL;lv_obj_t *ui_Container2 = NULL;lv_obj_t *ui_Container6 = NULL;lv_obj_t *ui_Image1 = NULL;lv_obj_t *ui_numNoti = NULL;lv_obj_t *ui_Container7 = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_batteryIcon = NULL;lv_obj_t *ui_TimeContainer = NULL;lv_obj_t *ui_HourLabel = NULL;lv_obj_t *ui_Label4 = NULL;lv_obj_t *ui_MinuteLabel = NULL;lv_obj_t *ui_Container3 = NULL;lv_obj_t *ui_Image2 = NULL;lv_obj_t *ui_Label6 = NULL;lv_obj_t *ui_Container4 = NULL;lv_obj_t *ui_day1 = NULL;lv_obj_t *ui_day2 = NULL;lv_obj_t *ui_day3 = NULL;lv_obj_t *ui_day4 = NULL;lv_obj_t *ui_day5 = NULL;lv_obj_t *ui_day6 = NULL;lv_obj_t *ui_day7 = NULL;
 // event funtions
 
 // build funtions
@@ -18,16 +18,60 @@ lv_obj_remove_flag( ui_Screen1, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_Container2 = lv_obj_create(ui_Screen1);
 lv_obj_remove_style_all(ui_Container2);
-lv_obj_set_width( ui_Container2, 64);
+lv_obj_set_width( ui_Container2, 154);
 lv_obj_set_height( ui_Container2, 24);
-lv_obj_set_x( ui_Container2, 50 );
-lv_obj_set_y( ui_Container2, -68 );
+lv_obj_set_x( ui_Container2, 5 );
+lv_obj_set_y( ui_Container2, -69 );
 lv_obj_set_align( ui_Container2, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container2,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container2, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+lv_obj_set_flex_align(ui_Container2, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
 lv_obj_remove_flag( ui_Container2, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
-ui_batteryIcon = lv_image_create(ui_Container2);
+ui_Container6 = lv_obj_create(ui_Container2);
+lv_obj_remove_style_all(ui_Container6);
+lv_obj_set_width( ui_Container6, 75);
+lv_obj_set_height( ui_Container6, 24);
+lv_obj_set_align( ui_Container6, LV_ALIGN_CENTER );
+lv_obj_set_flex_flow(ui_Container6,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(ui_Container6, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+lv_obj_remove_flag( ui_Container6, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+ui_Image1 = lv_image_create(ui_Container6);
+lv_image_set_src(ui_Image1, &ui_img_1156340770);
+lv_obj_set_width( ui_Image1, LV_SIZE_CONTENT);  /// 24
+lv_obj_set_height( ui_Image1, LV_SIZE_CONTENT);   /// 24
+lv_obj_set_x( ui_Image1, -251 );
+lv_obj_set_y( ui_Image1, 99 );
+lv_obj_set_align( ui_Image1, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Image1, LV_OBJ_FLAG_CLICKABLE );   /// Flags
+lv_obj_remove_flag( ui_Image1, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+ui_numNoti = lv_label_create(ui_Container6);
+lv_obj_set_width( ui_numNoti, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_numNoti, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_numNoti, LV_ALIGN_CENTER );
+lv_label_set_text(ui_numNoti,"10");
+
+ui_Container7 = lv_obj_create(ui_Container2);
+lv_obj_remove_style_all(ui_Container7);
+lv_obj_set_width( ui_Container7, 75);
+lv_obj_set_height( ui_Container7, 24);
+lv_obj_set_align( ui_Container7, LV_ALIGN_CENTER );
+lv_obj_set_flex_flow(ui_Container7,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(ui_Container7, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+lv_obj_remove_flag( ui_Container7, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+ui_Label5 = lv_label_create(ui_Container7);
+lv_obj_set_width( ui_Label5, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_Label5, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_Label5, LV_ALIGN_CENTER );
+lv_label_set_text(ui_Label5,"90%");
+lv_obj_set_style_pad_left(ui_Label5, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(ui_Label5, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(ui_Label5, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_Label5, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+ui_batteryIcon = lv_image_create(ui_Container7);
 lv_image_set_src(ui_batteryIcon, &ui_img_battery_status_4_png);
 lv_obj_set_width( ui_batteryIcon, 24);
 lv_obj_set_height( ui_batteryIcon, 24);
@@ -36,12 +80,6 @@ lv_obj_set_y( ui_batteryIcon, -64 );
 lv_obj_set_align( ui_batteryIcon, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_batteryIcon, LV_OBJ_FLAG_CLICKABLE );   /// Flags
 lv_obj_remove_flag( ui_batteryIcon, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-ui_Label5 = lv_label_create(ui_Container2);
-lv_obj_set_width( ui_Label5, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Label5, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_align( ui_Label5, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Label5,"90%");
 
 ui_TimeContainer = lv_obj_create(ui_Screen1);
 lv_obj_remove_style_all(ui_TimeContainer);
@@ -195,9 +233,13 @@ void ui_Screen1_screen_destroy(void)
 // NULL screen variables
 ui_Screen1= NULL;
 ui_Container2= NULL;
+ui_Container6= NULL;
+ui_Image1= NULL;
+ui_numNoti= NULL;
+ui_Container7= NULL;
+ui_Label5= NULL;
 uic_batteryIcon= NULL;
 ui_batteryIcon= NULL;
-ui_Label5= NULL;
 ui_TimeContainer= NULL;
 ui_HourLabel= NULL;
 ui_Label4= NULL;
