@@ -13,6 +13,7 @@
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
+		zephyr,storage-partition = &storage_partition;
 	};
 
 	aliases {
