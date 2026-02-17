@@ -2,14 +2,20 @@
 
 #include <bluetooth/services/ancs_client.h>
 #include <bluetooth/services/cts_client.h>
+#include <stdio.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/uuid.h>
+#include <zephyr/device.h>
+#include <zephyr/devicetree.h>
+#include <zephyr/drivers/flash.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/sys/reboot.h>
 
 #include "ancs_client.h"
 #include "cts_client.h"
@@ -30,6 +36,19 @@ static const struct bt_data ad[] = {
 static const struct bt_data sd[] = {
     BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
 };
+
+static void clear_all_settings() {
+#define TEST_PARTITION storage_partition
+#define TEST_PARTITION_OFFSET FIXED_PARTITION_OFFSET(TEST_PARTITION)
+#define TEST_PARTITION_DEVICE FIXED_PARTITION_DEVICE(TEST_PARTITION)
+#define TEST_PARTITION_SIZE FIXED_PARTITION_SIZE(TEST_PARTITION)
+
+  if (flash_erase(TEST_PARTITION_DEVICE, TEST_PARTITION_OFFSET, TEST_PARTITION_SIZE) != 0) {
+    LOG_ERR("Failed to erase flash partition");
+  } else {
+    LOG_INF("Successfully erased flash partition");
+  }
+}
 
 static void adv_work_handler(struct k_work* work) {
   int err;
@@ -71,6 +90,11 @@ static void disconnected(struct bt_conn* conn, uint8_t reason) {
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
   LOG_INF("Disconnected from %s, reason 0x%02x %s", addr, reason, bt_hci_err_to_str(reason));
 
+  LOG_INF("Erasing all settings and restarting advertising...");
+
+  clear_all_settings();
+
+  sys_reboot(SYS_REBOOT_COLD);
   advertising_start();
 }
 
