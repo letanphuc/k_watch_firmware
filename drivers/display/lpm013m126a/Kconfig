@@ -1,0 +1,9 @@
+# Kconfig - LPM013M126A Display Driver
+
+config DISPLAY_LPM013M126A
+	bool "JDI LPM013M126A Display Driver"
+	default y
+	depends on DT_HAS_JDI_LPM013M126A_ENABLED
+	select SPI
+	help
+	  Enable support for JDI LPM013M126A Memory LCD.

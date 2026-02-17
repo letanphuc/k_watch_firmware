@@ -1,9 +1,10 @@
 #include "watchface_screen.h"
 
 #include <lvgl.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/display.h>
 #include <zephyr/logging/log.h>
 
-#include "../../driver/LPM013M126A.h"
 #include "../../hal/rtc.h"
 #include "../app.h"
 #include "../model.h"
@@ -86,7 +87,21 @@ static void watchface_handle_button(app_event_t* event) {
         current_brightness += 10;
       }
       LOG_INF("Setting brightness to %d%%", current_brightness);
-      cmlcd_backlight_set(100 - current_brightness);
+      const struct device* display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+      if (device_is_ready(display_dev)) {
+        display_set_brightness(
+            display_dev,
+            (uint8_t)(100 - current_brightness));  // 0-255 actually, but let's assume 0-100 for now or map it.
+        /* The driver implements set_brightness taking uint8_t 0-255.
+           User logic used 0-100.
+           If I pass 0-100 to my driver, it maps 0-100 to pulse width.
+           My driver: pulse = (period * brightness) / 255;
+           If brightness is 100 (max here), pulse is 100/255 < 50% duty.
+           I should map 0-100 to 0-255.
+        */
+        uint8_t brightness_u8 = (uint8_t)((100 - current_brightness) * 255 / 100);
+        display_set_brightness(display_dev, brightness_u8);
+      }
       break;
     case 1:
       // Button 1: Switch to notification screen
@@ -98,7 +113,12 @@ static void watchface_handle_button(app_event_t* event) {
         current_brightness -= 10;
       }
       LOG_INF("Setting brightness to %d%%", current_brightness);
-      cmlcd_backlight_set(100 - current_brightness);
+
+      display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+      if (device_is_ready(display_dev)) {
+        uint8_t brightness_u8 = (uint8_t)((100 - current_brightness) * 255 / 100);
+        display_set_brightness(display_dev, brightness_u8);
+      }
       break;
     default:
       LOG_WRN("Unhandled button index: %d", button_idx);

@@ -1,0 +1,33 @@
+# JDI LPM013M126A Display Binding
+
+description: JDI LPM013M126A 176x176 Memory LCD
+
+compatible: "jdi,lpm013m126a"
+
+include: [spi-device.yaml]
+
+properties:
+  width:
+    type: int
+    required: true
+    description: Display width in pixels
+
+  height:
+    type: int
+    required: true
+    description: Display height in pixels
+
+  disp-en-gpios:
+    type: phandle-array
+    required: false
+    description: Display enable pin (DISP)
+
+  extcomin-gpios:
+    type: phandle-array
+    required: false
+    description: External COM inversion pin (EXTCOMIN)
+
+  pwms:
+    type: phandle-array
+    required: false
+    description: Backlight PWM channel

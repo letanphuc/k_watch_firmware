@@ -1,0 +1,7 @@
+# Kconfig - Display Drivers
+
+menu "Display Drivers"
+
+rsource "lpm013m126a/Kconfig"
+
+endmenu
