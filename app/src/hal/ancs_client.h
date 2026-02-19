@@ -7,12 +7,19 @@
 /* Allocated size for attribute data. */
 #define ATTR_DATA_SIZE BT_ANCS_ATTR_DATA_MAX
 
+#define ATTR_TITLE_SIZE 64
+#define ATTR_MESSAGE_SIZE 256
+#define ATTR_APP_ID_SIZE 32
+#define ATTR_COMMON_SIZE 32
+
 /* Struct for notification info */
 typedef struct {
-  char title[ATTR_DATA_SIZE];
-  char message[ATTR_DATA_SIZE];
-  char app[ATTR_DATA_SIZE];
+  char* title;
+  char* message;
+  char* app;
 } ancs_noti_info_t;
+
+void ancs_noti_info_free(ancs_noti_info_t* noti);
 
 int ancs_client_init(void);
 

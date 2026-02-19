@@ -42,10 +42,9 @@ lv_obj_set_style_bg_color(ui_title, lv_color_hex(0x0000FF), LV_PART_MAIN | LV_ST
 lv_obj_set_style_bg_opa(ui_title, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_content = lv_label_create(ui_Container1);
-lv_obj_set_width( ui_content, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_content, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_align( ui_content, LV_ALIGN_CENTER );
-lv_label_set_text(ui_content,"text");
+lv_obj_set_width( ui_content, 170);
+lv_obj_set_height( ui_content, 111);
+lv_label_set_text(ui_content,"Thủ tướng Campuchia hy vọng Hội đồng Hòa bình do Tổng thống Trump khởi xướng sẽ giúp nước này và Thái Lan hạ nhiệt căng thẳng.\n\n\"Chúng tôi tin Hội đồng Hòa bình là sự bổ sung đáng giá cho những cơ chế hiện có của các tổ chức quốc tế nhằm thúc đẩy hòa bình, ổn định, cũng như xây dựng và bảo đảm hòa bình tại nhiều khu vực đang bị ảnh hưởng hoặc đe dọa bởi chiến tranh và xung đột\", Thủ tướng Campuchia Hun Manet trả lời Reuters ngày 17/2.");
 lv_obj_set_style_text_font(ui_content, &ui_font_NotoSansCondensedMedium, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container5 = lv_obj_create(ui_Screen2);

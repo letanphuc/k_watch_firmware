@@ -1,7 +1,8 @@
-#include "model.h"
-
 #include <string.h>
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+
+#include "model.h"
 
 LOG_MODULE_REGISTER(model);
 
@@ -16,9 +17,15 @@ void model_add_notification(const ancs_noti_info_t* noti) {
 
   LOG_INF("Adding notification: %s - %s - %s", noti->title, noti->message, noti->app);
 
-  // Copy notification to the current head
-  LOG_INF("Copying notification to head: %d", head);
-  memcpy(&notifications[head], noti, sizeof(ancs_noti_info_t));
+  // If we are overwriting an existing notification, free its strings
+  if (noti_count == MAX_NOTIFICATIONS) {
+    if (notifications[head].title) k_free(notifications[head].title);
+    if (notifications[head].message) k_free(notifications[head].message);
+    if (notifications[head].app) k_free(notifications[head].app);
+  }
+
+  // Copy notification (shallow copy of pointers to transfer ownership)
+  notifications[head] = *noti;
 
   // Update head (circularly)
   head = (head + 1) % MAX_NOTIFICATIONS;

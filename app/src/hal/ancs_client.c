@@ -33,18 +33,19 @@ static atomic_t discovery_flags;
 static struct bt_ancs_evt_notif notification_latest;
 /* Local copy of the newest notification attribute. */
 static struct bt_ancs_attr notif_attr_latest;
-/* Local copy of the newest app attribute. */
-static struct bt_ancs_attr notif_attr_app_id_latest;
-/* Buffers to store attribute data. */
-static uint8_t attr_appid[ATTR_DATA_SIZE];
-static uint8_t attr_title[ATTR_DATA_SIZE];
-static uint8_t attr_subtitle[ATTR_DATA_SIZE];
-static uint8_t attr_message[ATTR_DATA_SIZE];
-static uint8_t attr_message_size[ATTR_DATA_SIZE];
-static uint8_t attr_date[ATTR_DATA_SIZE];
-static uint8_t attr_posaction[ATTR_DATA_SIZE];
-static uint8_t attr_negaction[ATTR_DATA_SIZE];
-static uint8_t attr_disp_name[ATTR_DATA_SIZE];
+typedef struct {
+  uint8_t app_id[ATTR_APP_ID_SIZE];
+  uint8_t title[ATTR_TITLE_SIZE];
+  uint8_t subtitle[ATTR_COMMON_SIZE];
+  uint8_t message[ATTR_MESSAGE_SIZE];
+  uint8_t message_size[ATTR_COMMON_SIZE];
+  uint8_t date[ATTR_COMMON_SIZE];
+  uint8_t posaction[ATTR_COMMON_SIZE];
+  uint8_t negaction[ATTR_COMMON_SIZE];
+  uint8_t disp_name[ATTR_COMMON_SIZE];
+} ancs_attr_buffers_t;
+
+static ancs_attr_buffers_t attr_bufs;
 
 /* String literals for the iOS notification categories. */
 static const char* lit_catid[BT_ANCS_CATEGORY_ID_COUNT] = {
@@ -280,25 +281,58 @@ static void bt_ancs_notification_source_handler(struct bt_ancs_client* ancs_c, i
   }
 }
 
+void ancs_noti_info_free(ancs_noti_info_t* noti) {
+  if (noti == NULL) {
+    return;
+  }
+  if (noti->title) {
+    k_free(noti->title);
+  }
+  if (noti->message) {
+    k_free(noti->message);
+  }
+  if (noti->app) {
+    k_free(noti->app);
+  }
+  k_free(noti);
+}
+
 static void bt_ancs_data_source_handler(struct bt_ancs_client* ancs_c, const struct bt_ancs_attr_response* response) {
   static ancs_noti_info_t noti_info;
   switch (response->command_id) {
-    case BT_ANCS_COMMAND_ID_GET_NOTIF_ATTRIBUTES:
+    case BT_ANCS_COMMAND_ID_GET_NOTIF_ATTRIBUTES: {
       notif_attr_latest = response->attr;
       notif_attr_print(&notif_attr_latest);
-      if (response->attr.attr_id == BT_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER) {
-        notif_attr_app_id_latest = response->attr;
-        strncpy(noti_info.app, (char*)response->attr.attr_data, ATTR_DATA_SIZE - 1);
-        noti_info.app[ATTR_DATA_SIZE - 1] = '\0';
-      } else if (response->attr.attr_id == BT_ANCS_NOTIF_ATTR_ID_TITLE) {
-        strncpy(noti_info.title, (char*)response->attr.attr_data, ATTR_DATA_SIZE - 1);
-        noti_info.title[ATTR_DATA_SIZE - 1] = '\0';
-      } else if (response->attr.attr_id == BT_ANCS_NOTIF_ATTR_ID_MESSAGE) {
-        strncpy(noti_info.message, (char*)response->attr.attr_data, ATTR_DATA_SIZE - 1);
-        noti_info.message[ATTR_DATA_SIZE - 1] = '\0';
+
+      uint16_t len = response->attr.attr_len;
+      char* str = NULL;
+
+      if (len > 0) {
+        str = k_malloc(len + 1);
+        if (str) {
+          memcpy(str, response->attr.attr_data, len);
+          str[len] = '\0';
+        }
       }
+
+      if (response->attr.attr_id == BT_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER) {
+        if (noti_info.app) k_free(noti_info.app);
+        noti_info.app = str;
+      } else if (response->attr.attr_id == BT_ANCS_NOTIF_ATTR_ID_TITLE) {
+        if (noti_info.title) k_free(noti_info.title);
+        noti_info.title = str;
+      } else if (response->attr.attr_id == BT_ANCS_NOTIF_ATTR_ID_MESSAGE) {
+        if (noti_info.message) k_free(noti_info.message);
+        if (str && len > 256) {
+          str[256] = '\0';
+        }
+        noti_info.message = str;
+      } else {
+        if (str) k_free(str);
+      }
+
       // Post event after all three important fields are received
-      if (noti_info.title[0] != '\0' && noti_info.message[0] != '\0' && noti_info.app[0] != '\0') {
+      if (noti_info.title && noti_info.message && noti_info.app) {
         ancs_noti_info_t* info_ptr = k_malloc(sizeof(ancs_noti_info_t));
         if (info_ptr) {
           *info_ptr = noti_info;
@@ -310,10 +344,14 @@ static void bt_ancs_data_source_handler(struct bt_ancs_client* ancs_c, const str
           app_event_post(&event);
         } else {
           LOG_ERR("Failed to allocate memory for ANCS notification info\n");
+          if (noti_info.title) k_free(noti_info.title);
+          if (noti_info.message) k_free(noti_info.message);
+          if (noti_info.app) k_free(noti_info.app);
         }
         memset(&noti_info, 0, sizeof(noti_info));
       }
       break;
+    }
 
     case BT_ANCS_COMMAND_ID_GET_APP_ATTRIBUTES:
       app_attr_print(&response->attr);
@@ -333,47 +371,52 @@ static int ancs_c_init(void) {
     return err;
   }
 
-  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER, attr_appid, ATTR_DATA_SIZE);
+  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER, &attr_bufs.app_id[0],
+                              sizeof(attr_bufs.app_id));
   if (err) {
     return err;
   }
 
-  err = bt_ancs_register_app_attr(&ancs_c, BT_ANCS_APP_ATTR_ID_DISPLAY_NAME, attr_disp_name, sizeof(attr_disp_name));
+  err = bt_ancs_register_app_attr(&ancs_c, BT_ANCS_APP_ATTR_ID_DISPLAY_NAME, attr_bufs.disp_name,
+                                  sizeof(attr_bufs.disp_name));
   if (err) {
     return err;
   }
 
-  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_TITLE, attr_title, ATTR_DATA_SIZE);
+  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_TITLE, attr_bufs.title, sizeof(attr_bufs.title));
   if (err) {
     return err;
   }
 
-  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_MESSAGE, attr_message, ATTR_DATA_SIZE);
+  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_MESSAGE, attr_bufs.message, sizeof(attr_bufs.message));
   if (err) {
     return err;
   }
 
-  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_SUBTITLE, attr_subtitle, ATTR_DATA_SIZE);
+  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_SUBTITLE, attr_bufs.subtitle, sizeof(attr_bufs.subtitle));
   if (err) {
     return err;
   }
 
-  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_MESSAGE_SIZE, attr_message_size, ATTR_DATA_SIZE);
+  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_MESSAGE_SIZE, attr_bufs.message_size,
+                              sizeof(attr_bufs.message_size));
   if (err) {
     return err;
   }
 
-  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_DATE, attr_date, ATTR_DATA_SIZE);
+  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_DATE, attr_bufs.date, sizeof(attr_bufs.date));
   if (err) {
     return err;
   }
 
-  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_POSITIVE_ACTION_LABEL, attr_posaction, ATTR_DATA_SIZE);
+  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_POSITIVE_ACTION_LABEL, attr_bufs.posaction,
+                              sizeof(attr_bufs.posaction));
   if (err) {
     return err;
   }
 
-  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_NEGATIVE_ACTION_LABEL, attr_negaction, ATTR_DATA_SIZE);
+  err = bt_ancs_register_attr(&ancs_c, BT_ANCS_NOTIF_ATTR_ID_NEGATIVE_ACTION_LABEL, attr_bufs.negaction,
+                              sizeof(attr_bufs.negaction));
 
   return err;
 }

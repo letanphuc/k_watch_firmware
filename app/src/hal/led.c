@@ -14,12 +14,6 @@ LOG_MODULE_REGISTER(led);
 static const struct device* const strip = DEVICE_DT_GET(STRIP_NODE);
 static struct led_rgb pixels[STRIP_NUM_PIXELS];
 
-static const struct led_rgb colors[] = {
-    RGB(LED_BRIGHTNESS, 0x00, 0x00), /* red */
-    RGB(0x00, LED_BRIGHTNESS, 0x00), /* green */
-    RGB(0x00, 0x00, LED_BRIGHTNESS), /* blue */
-};
-
 int led_init(void) {
   if (!device_is_ready(strip)) {
     LOG_ERR("LED strip device %s is not ready", strip->name);
