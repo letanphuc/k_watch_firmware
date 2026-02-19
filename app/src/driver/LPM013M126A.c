@@ -115,6 +115,8 @@ int cmlcd_backlight_set(uint8_t percent)  // 0..100
   /* Lưu ý: vì DTS đã INVERTED, driver sẽ tự xử lý mức tác dụng là LOW.
      Nếu thấy sáng/tối bị đảo, đổi thành: pulse = period - pulse; */
 
+  pulse = period - pulse;
+
   if (!pwm_is_ready_dt(&dp_bl)) return -ENODEV;
   return pwm_set_dt(&dp_bl, period, pulse);
 }

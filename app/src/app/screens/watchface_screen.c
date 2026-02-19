@@ -1,18 +1,15 @@
-#include "watchface_screen.h"
-
 #include <lvgl.h>
 #include <zephyr/logging/log.h>
 
-#include "../../driver/LPM013M126A.h"
 #include "../../hal/rtc.h"
 #include "../app.h"
 #include "../model.h"
+#include "../modes.h"
 #include "../ui/ui.h"
 #include "noti_screen.h"
+#include "watchface_screen.h"
 
 LOG_MODULE_REGISTER(watchface_screen);
-
-static uint32_t current_brightness = 0;
 
 static void watchface_handle_rtc_alarm(app_event_t* event) {
   (void)event;
@@ -81,25 +78,26 @@ static void watchface_handle_button(app_event_t* event) {
   uint32_t button_idx = event->value;
   LOG_INF("Button %d event", button_idx);
   switch (button_idx) {
-    case 0:
-      if (current_brightness < 100) {
-        current_brightness += 10;
+    case 0: {
+      uint8_t brightness = modes_get_active_brightness();
+      if (brightness < 100) {
+        brightness += 10;
       }
-      LOG_INF("Setting brightness to %d%%", current_brightness);
-      cmlcd_backlight_set(100 - current_brightness);
+      modes_set_active_brightness(brightness);
       break;
+    }
     case 1:
       // Button 1: Switch to notification screen
       app_switch_screen(&noti_screen);
       break;
-    case 2:
-      // Button 3: Decrease brightness
-      if (current_brightness > 0) {
-        current_brightness -= 10;
+    case 2: {
+      uint8_t brightness = modes_get_active_brightness();
+      if (brightness > 0) {
+        brightness -= 10;
       }
-      LOG_INF("Setting brightness to %d%%", current_brightness);
-      cmlcd_backlight_set(100 - current_brightness);
+      modes_set_active_brightness(brightness);
       break;
+    }
     default:
       LOG_WRN("Unhandled button index: %d", button_idx);
       break;
@@ -130,7 +128,9 @@ static void watchface_handle_event(app_event_t* event) {
       break;
     case APP_EVENT_BLE_ANCS:
       // Update notification count
-      lv_label_set_text_fmt(ui_numNoti, "%u", model_get_notification_count());
+      const uint32_t count = model_get_notification_count();
+      LOG_INF("Notification count updated: %u", count);
+      lv_label_set_text_fmt(ui_numNoti, "%u", count);
       break;
     default:
       break;

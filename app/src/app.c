@@ -8,6 +8,7 @@
 #include <zephyr/sys/util.h>
 
 #include "app/model.h"
+#include "app/modes.h"
 #include "app/screen.h"
 #include "app/screens/noti_screen.h"
 #include "app/screens/watchface_screen.h"
@@ -97,6 +98,9 @@ int app_init(void) {
   watchface_screen.init();
   noti_screen.init();
 
+  // Initialize modes
+  modes_init();
+
   // Load default screen
   app_switch_screen(&watchface_screen);
 
@@ -121,9 +125,12 @@ uint32_t app_task_handler(void) {
         if (event.ptr) {
           model_add_notification((ancs_noti_info_t*)event.ptr);
           k_free(event.ptr);
-
           model_dump_notifications();
         }
+      } else if (event.type == APP_EVENT_BUTTON) {
+        modes_activity_detected();
+      } else if (event.type == APP_EVENT_MODE_TIMEOUT) {
+        modes_handle_timeout();
       }
 
       if (current_screen && current_screen->handle_event) {

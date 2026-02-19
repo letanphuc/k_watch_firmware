@@ -23,6 +23,7 @@ target_sources(app PRIVATE
   src/hal/ancs_client.c
   src/hal/power.c
   src/app.c
+  src/app/modes.c
   src/app/model.c
   src/app/screens/watchface_screen.c
   src/app/screens/noti_screen.c

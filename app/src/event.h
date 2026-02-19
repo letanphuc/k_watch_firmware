@@ -10,6 +10,7 @@ typedef enum {
   APP_EVENT_BLE_ANCS,
   APP_EVENT_BLE_CTS,
   APP_EVENT_BATTERY,
+  APP_EVENT_MODE_TIMEOUT,
 } app_event_type_t;
 
 typedef struct {
