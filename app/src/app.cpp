@@ -1,25 +1,22 @@
-#include "app.h"
+#include "app.hpp"
 
 #include <lvgl.h>
 #include <stdint.h>
-#include <sys/_stdint.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/util.h>
 
-#include "app/model.h"
-#include "app/modes.h"
-#include "app/screen.h"
-#include "app/screens/noti_screen.h"
-#include "app/screens/watchface_screen.h"
+#include "app/model.hpp"
+#include "app/modes.hpp"
+#include "app/screen.hpp"
+#include "app/screens/noti_screen.hpp"
+#include "app/screens/watchface_screen.hpp"
 #include "display/lv_display.h"
-#include "driver/LPM013M126A.h"
-#include "hal/ancs_client.h"
-#include "misc/lv_color.h"
-#include "rtc.h"
+#include "hal/ancs_client.hpp"
+#include "hal/rtc.hpp"
 #include "ui/ui.h"
 
-LOG_MODULE_REGISTER(ui_module, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(ui_module_cpp, LOG_LEVEL_DBG);
 
 #define UI_LCD_WIDTH LCD_DEVICE_WIDTH
 #define UI_LCD_HEIGHT LCD_DEVICE_HEIGHT
@@ -28,9 +25,7 @@ LOG_MODULE_REGISTER(ui_module, LOG_LEVEL_DBG);
 #define UI_DRAW_BUF_BYTES (UI_DRAW_BUF_PIXELS * LV_COLOR_FORMAT_GET_SIZE(LV_COLOR_FORMAT_RGB565))
 
 static uint8_t draw_buf_mem[UI_DRAW_BUF_BYTES] __aligned(16);
-
-static lv_display_t* disp;
-static screen_t* current_screen = NULL;
+static lv_display_t* disp_ptr;
 
 static uint8_t rgb565_to_lcd4(uint16_t rgb565) {
   uint8_t r5 = (rgb565 >> 11) & 0x1F;
@@ -56,17 +51,17 @@ static void ui_display_flush_cb(lv_display_t* display, const lv_area_t* area, ui
   lv_display_flush_ready(display);
 }
 
-void app_switch_screen(screen_t* screen) {
-  if (screen == NULL || screen == current_screen) {
+void App::switch_screen(Screen* screen) {
+  if (screen == nullptr || screen == current_screen_) {
     return;
   }
-  current_screen = screen;
-  if (current_screen->load) {
-    current_screen->load();
-  }
+  current_screen_ = screen;
+  current_screen_->load();
 }
 
-int app_init(void) {
+K_MSGQ_DEFINE(app_msgq_cpp, sizeof(app_event_t), 10, 4);
+
+int App::init() {
   int ret;
 
   ret = cmlcd_init();
@@ -83,58 +78,56 @@ int app_init(void) {
   lv_init();
 #endif
   memset(draw_buf_mem, 0, sizeof(draw_buf_mem));
-  disp = lv_display_create(UI_LCD_WIDTH, UI_LCD_HEIGHT);
-  LOG_INF("LVGL display created at %p", disp);
+  disp_ptr = lv_display_create(UI_LCD_WIDTH, UI_LCD_HEIGHT);
+  LOG_INF("LVGL display created at %p", disp_ptr);
   lv_display_delete(lv_display_get_default());
-  lv_display_set_default(disp);
-  lv_display_set_color_format(disp, LV_COLOR_FORMAT_RGB565);
-  lv_display_set_flush_cb(disp, ui_display_flush_cb);
-  lv_display_set_buffers(disp, draw_buf_mem, NULL, UI_DRAW_BUF_BYTES, LV_DISPLAY_RENDER_MODE_FULL);
+  lv_display_set_default(disp_ptr);
+  lv_display_set_color_format(disp_ptr, LV_COLOR_FORMAT_RGB565);
+  lv_display_set_flush_cb(disp_ptr, ui_display_flush_cb);
+  lv_display_set_buffers(disp_ptr, draw_buf_mem, NULL, UI_DRAW_BUF_BYTES, LV_DISPLAY_RENDER_MODE_FULL);
 
   ui_init();
   LOG_INF("UI init done");
 
   // Initialize screens
-  watchface_screen.init();
-  noti_screen.init();
+  WatchfaceScreen::instance().init();
+  NotiScreen::instance().init();
 
   // Initialize modes
-  modes_init();
+  Modes::instance().init();
 
   // Load default screen
-  app_switch_screen(&watchface_screen);
+  switch_screen(&WatchfaceScreen::instance());
 
   return 0;
 }
 
-K_MSGQ_DEFINE(app_msgq, sizeof(app_event_t), 10, 4);
-
-int app_event_post(app_event_t* event) {
+int App::event_post(app_event_t* event) {
   LOG_INF("Posting event type: %u", event->type);
-  return k_msgq_put(&app_msgq, event, K_NO_WAIT);
+  return k_msgq_put(&app_msgq_cpp, event, K_NO_WAIT);
 }
 
-uint32_t app_task_handler(void) {
+uint32_t App::task_handler() {
   uint32_t sleep = 1;
   while (1) {
     app_event_t event;
-    while (k_msgq_get(&app_msgq, &event, K_MSEC(sleep)) == 0) {
+    while (k_msgq_get(&app_msgq_cpp, &event, K_MSEC(sleep)) == 0) {
       LOG_INF("Handling event type: %u", event.type);
       if (event.type == APP_EVENT_BLE_ANCS) {
         // App handles notification management first
         if (event.ptr) {
-          model_add_notification((ancs_noti_info_t*)event.ptr);
+          Model::instance().add_notification((ancs_noti_info_t*)event.ptr);
           k_free(event.ptr);
-          model_dump_notifications();
+          Model::instance().dump_notifications();
         }
       } else if (event.type == APP_EVENT_BUTTON) {
-        modes_activity_detected();
+        Modes::instance().activity_detected();
       } else if (event.type == APP_EVENT_MODE_TIMEOUT) {
-        modes_handle_timeout();
+        Modes::instance().handle_timeout();
       }
 
-      if (current_screen && current_screen->handle_event) {
-        current_screen->handle_event(&event);
+      if (current_screen_) {
+        current_screen_->handle_event(&event);
       }
     }
     sleep = lv_timer_handler();

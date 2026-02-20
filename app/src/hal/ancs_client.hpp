@@ -1,11 +1,7 @@
-#ifndef ANCS_CLIENT_H
-#define ANCS_CLIENT_H
+#ifndef ANCS_CLIENT_HPP
+#define ANCS_CLIENT_HPP
 
-#include <bluetooth/services/ancs_client.h>
-#include <zephyr/bluetooth/conn.h>
-
-/* Allocated size for attribute data. */
-#define ATTR_DATA_SIZE BT_ANCS_ATTR_DATA_MAX
+#include <stdint.h>
 
 #define ATTR_TITLE_SIZE 64
 #define ATTR_MESSAGE_SIZE 256
@@ -21,6 +17,17 @@ typedef struct {
 
 void ancs_noti_info_free(ancs_noti_info_t* noti);
 
-int ancs_client_init(void);
+class AncsClient {
+ public:
+  static AncsClient& instance() {
+    static AncsClient inst;
+    return inst;
+  }
 
-#endif  // ANCS_CLIENT_H
+  int init();
+
+ private:
+  AncsClient() = default;
+};
+
+#endif /* ANCS_CLIENT_HPP */

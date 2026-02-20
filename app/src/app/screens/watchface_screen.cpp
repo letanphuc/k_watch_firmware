@@ -1,22 +1,23 @@
+#include "watchface_screen.hpp"
+
 #include <lvgl.h>
 #include <zephyr/logging/log.h>
 
-#include "../../hal/rtc.h"
-#include "../app.h"
-#include "../model.h"
-#include "../modes.h"
+#include "../../hal/rtc.hpp"
+#include "../app.hpp"
+#include "../model.hpp"
+#include "../modes.hpp"
 #include "../ui/ui.h"
-#include "noti_screen.h"
-#include "watchface_screen.h"
+#include "noti_screen.hpp"
 
-LOG_MODULE_REGISTER(watchface_screen);
+LOG_MODULE_REGISTER(watchface_screen_cpp);
 
-static void watchface_handle_rtc_alarm(app_event_t* event) {
+void WatchfaceScreen::handle_rtc_alarm(app_event_t* event) {
   (void)event;
   struct rtc_time time;
   static const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-  if (rtc_time_get(&time) != 0) {
+  if (Rtc::instance().time_get(&time) != 0) {
     LOG_ERR("Failed to get RTC time");
     return;
   }
@@ -55,7 +56,7 @@ static void watchface_handle_rtc_alarm(app_event_t* event) {
   }
 }
 
-static void watchface_handle_battery(app_event_t* event) {
+void WatchfaceScreen::handle_battery(app_event_t* event) {
   uint32_t percent = event->value;
   int battery_index = percent / 20;
   if (battery_index > 5) {
@@ -74,28 +75,28 @@ static void watchface_handle_battery(app_event_t* event) {
   lv_label_set_text_fmt(ui_Label5, "%u%%", percent);
 }
 
-static void watchface_handle_button(app_event_t* event) {
-  uint32_t button_idx = event->value;
+void WatchfaceScreen::handle_button(app_event_t* event) {
+  uint32_t button_idx = (uint32_t)event->value;
   LOG_INF("Button %d event", button_idx);
   switch (button_idx) {
     case 0: {
-      uint8_t brightness = modes_get_active_brightness();
+      uint8_t brightness = Modes::instance().get_active_brightness();
       if (brightness < 100) {
         brightness += 10;
       }
-      modes_set_active_brightness(brightness);
+      Modes::instance().set_active_brightness(brightness);
       break;
     }
     case 1:
       // Button 1: Switch to notification screen
-      app_switch_screen(&noti_screen);
+      App::instance().switch_screen(&NotiScreen::instance());
       break;
     case 2: {
-      uint8_t brightness = modes_get_active_brightness();
+      uint8_t brightness = Modes::instance().get_active_brightness();
       if (brightness > 0) {
         brightness -= 10;
       }
-      modes_set_active_brightness(brightness);
+      Modes::instance().set_active_brightness(brightness);
       break;
     }
     default:
@@ -104,31 +105,28 @@ static void watchface_handle_button(app_event_t* event) {
   }
 }
 
-static void watchface_init(void) {
-  // ui_Screen1_screen_init() is already called in ui_init()
-  lv_label_set_text_fmt(ui_numNoti, "%u", model_get_notification_count());
-}
+void WatchfaceScreen::init() { lv_label_set_text_fmt(ui_numNoti, "%u", Model::instance().get_notification_count()); }
 
-static void watchface_load(void) {
+void WatchfaceScreen::load() {
   lv_screen_load(ui_Screen1);
   // Trigger initial update
-  watchface_handle_rtc_alarm(NULL);
+  handle_rtc_alarm(nullptr);
 }
 
-static void watchface_handle_event(app_event_t* event) {
+void WatchfaceScreen::handle_event(app_event_t* event) {
   switch (event->type) {
     case APP_EVENT_RTC_ALARM:
-      watchface_handle_rtc_alarm(event);
+      handle_rtc_alarm(event);
       break;
     case APP_EVENT_BATTERY:
-      watchface_handle_battery(event);
+      handle_battery(event);
       break;
     case APP_EVENT_BUTTON:
-      watchface_handle_button(event);
+      handle_button(event);
       break;
     case APP_EVENT_BLE_ANCS:
       // Update notification count
-      const uint32_t count = model_get_notification_count();
+      const uint32_t count = Model::instance().get_notification_count();
       LOG_INF("Notification count updated: %u", count);
       lv_label_set_text_fmt(ui_numNoti, "%u", count);
       break;
@@ -136,9 +134,3 @@ static void watchface_handle_event(app_event_t* event) {
       break;
   }
 }
-
-screen_t watchface_screen = {
-    .init = watchface_init,
-    .handle_event = watchface_handle_event,
-    .load = watchface_load,
-};

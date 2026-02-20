@@ -1,12 +1,7 @@
-/*
- * Copyright (c) 2021 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
- */
-
-#include "ancs_client.h"
+#include "ancs_client.hpp"
 
 #include <bluetooth/gatt_dm.h>
+#include <bluetooth/services/ancs_client.h>
 #include <bluetooth/services/gattp.h>
 #include <stdint.h>
 #include <zephyr/bluetooth/bluetooth.h>
@@ -19,9 +14,9 @@
 #include <zephyr/sys/atomic.h>
 #include <zephyr/sys/byteorder.h>
 
-#include "app.h"
+#include "../app.hpp"
 
-LOG_MODULE_REGISTER(app_ancs_client);
+LOG_MODULE_REGISTER(ancs_client_cpp, LOG_LEVEL_INF);
 
 enum { DISCOVERY_ANCS_ONGOING, DISCOVERY_ANCS_SUCCEEDED, SERVICE_CHANGED_INDICATED };
 
@@ -33,6 +28,7 @@ static atomic_t discovery_flags;
 static struct bt_ancs_evt_notif notification_latest;
 /* Local copy of the newest notification attribute. */
 static struct bt_ancs_attr notif_attr_latest;
+
 typedef struct {
   uint8_t app_id[ATTR_APP_ID_SIZE];
   uint8_t title[ATTR_TITLE_SIZE];
@@ -242,7 +238,7 @@ static void security_changed(struct bt_conn* conn, bt_security_t level, enum bt_
   }
 }
 
-BT_CONN_CB_DEFINE(conn_callbacks) = {
+BT_CONN_CB_DEFINE(ancs_conn_callbacks) = {
     .security_changed = security_changed,
 };
 
@@ -277,24 +273,7 @@ static void bt_ancs_notification_source_handler(struct bt_ancs_client* ancs_c, i
     if (req_err) {
       LOG_ERR("Failed to request notification attributes (err %d)\n", req_err);
     }
-    // Do not emit any event here
   }
-}
-
-void ancs_noti_info_free(ancs_noti_info_t* noti) {
-  if (noti == NULL) {
-    return;
-  }
-  if (noti->title) {
-    k_free(noti->title);
-  }
-  if (noti->message) {
-    k_free(noti->message);
-  }
-  if (noti->app) {
-    k_free(noti->app);
-  }
-  k_free(noti);
 }
 
 static void bt_ancs_data_source_handler(struct bt_ancs_client* ancs_c, const struct bt_ancs_attr_response* response) {
@@ -308,7 +287,7 @@ static void bt_ancs_data_source_handler(struct bt_ancs_client* ancs_c, const str
       char* str = NULL;
 
       if (len > 0) {
-        str = k_malloc(len + 1);
+        str = (char*)k_malloc(len + 1);
         if (str) {
           memcpy(str, response->attr.attr_data, len);
           str[len] = '\0';
@@ -333,7 +312,7 @@ static void bt_ancs_data_source_handler(struct bt_ancs_client* ancs_c, const str
 
       // Post event after all three important fields are received
       if (noti_info.title && noti_info.message && noti_info.app) {
-        ancs_noti_info_t* info_ptr = k_malloc(sizeof(ancs_noti_info_t));
+        ancs_noti_info_t* info_ptr = (ancs_noti_info_t*)k_malloc(sizeof(ancs_noti_info_t));
         if (info_ptr) {
           *info_ptr = noti_info;
           app_event_t event = {
@@ -341,7 +320,7 @@ static void bt_ancs_data_source_handler(struct bt_ancs_client* ancs_c, const str
               .ptr = info_ptr,
               .len = sizeof(ancs_noti_info_t),
           };
-          app_event_post(&event);
+          App::instance().event_post(&event);
         } else {
           LOG_ERR("Failed to allocate memory for ANCS notification info\n");
           if (noti_info.title) k_free(noti_info.title);
@@ -423,7 +402,7 @@ static int ancs_c_init(void) {
 
 static int gattp_init(void) { return bt_gattp_init(&gattp); }
 
-int ancs_client_init(void) {
+int AncsClient::init(void) {
   int err;
 
   err = ancs_c_init();

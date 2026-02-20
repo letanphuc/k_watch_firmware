@@ -1,4 +1,4 @@
-#include "cts_client.h"
+#include "cts_client.hpp"
 
 #include <bluetooth/gatt_dm.h>
 #include <bluetooth/services/cts_client.h>
@@ -10,9 +10,9 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "app.h"
+#include "../app.hpp"
 
-LOG_MODULE_REGISTER(app_cts_client);
+LOG_MODULE_REGISTER(cts_client_cpp, LOG_LEVEL_INF);
 
 static struct bt_cts_client cts_c;
 static bool has_cts;
@@ -49,7 +49,7 @@ static void apply_current_time(const struct bt_cts_current_time* current_time) {
     return;
   }
 
-  struct rtc_time* time_ptr = k_malloc(sizeof(struct rtc_time));
+  struct rtc_time* time_ptr = (struct rtc_time*)k_malloc(sizeof(struct rtc_time));
   if (!time_ptr) {
     LOG_ERR("Failed to allocate memory for CTS time");
     return;
@@ -61,7 +61,7 @@ static void apply_current_time(const struct bt_cts_current_time* current_time) {
       .ptr = time_ptr,
       .len = sizeof(struct rtc_time),
   };
-  app_event_post(&event);
+  App::instance().event_post(&event);
 
   LOG_INF("CTS event posted");
 }
@@ -170,12 +170,12 @@ static void security_changed(struct bt_conn* conn, bt_security_t level, enum bt_
   }
 }
 
-BT_CONN_CB_DEFINE(conn_callbacks) = {
+BT_CONN_CB_DEFINE(cts_conn_callbacks) = {
     .connected = connected,
     .security_changed = security_changed,
 };
 
-int cts_client_init(void) {
+int CtsClient::init(void) {
   int err;
 
   err = bt_cts_client_init(&cts_c);

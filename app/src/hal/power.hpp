@@ -1,5 +1,5 @@
-#ifndef POWER_H
-#define POWER_H
+#ifndef POWER_HPP
+#define POWER_HPP
 
 #include <stdint.h>
 #include <zephyr/drivers/sensor.h>
@@ -15,8 +15,19 @@ struct power_data {
   struct sensor_value vbus_status;
 };
 
-int power_init(void);
-int power_read(struct power_data* data);
-void power_test(void);
+class Power {
+ public:
+  static Power& instance() {
+    static Power inst;
+    return inst;
+  }
 
-#endif /* POWER_H */
+  int init();
+  int read(struct power_data* data);
+  void test();
+
+ private:
+  Power() = default;
+};
+
+#endif /* POWER_HPP */

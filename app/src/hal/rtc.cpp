@@ -1,16 +1,16 @@
-#include "rtc.h"
+#include "rtc.hpp"
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/logging/log.h>
 
-#include "app.h"
+#include "../app.hpp"
 
-LOG_MODULE_REGISTER(rtc_module);
+LOG_MODULE_REGISTER(rtc_cpp, LOG_LEVEL_INF);
 
 static const struct device* rtc_dev = DEVICE_DT_GET(DT_NODELABEL(rv8263));
 
-static int rtc_schedule_next_minute_alarm(void) {
+int Rtc::schedule_next_minute_alarm(void) {
   struct rtc_time now;
   int ret = rtc_get_time(rtc_dev, &now);
   if (ret < 0) {
@@ -70,11 +70,11 @@ static void rtc_minute_alarm_cb(const struct device* dev, uint16_t id, void* use
       .type = APP_EVENT_RTC_ALARM,
       .len = 0,
   };
-  app_event_post(&event);
-  rtc_schedule_next_minute_alarm();
+  App::instance().event_post(&event);
+  Rtc::instance().minute_alarm_enable();  // Use minute_alarm_enable to reschedule
 }
 
-int rtc_init(void) {
+int Rtc::init(void) {
   if (!device_is_ready(rtc_dev)) {
     LOG_ERR("RTC device not ready");
     return -ENODEV;
@@ -84,7 +84,7 @@ int rtc_init(void) {
   return 0;
 }
 
-int rtc_time_get(struct rtc_time* time) {
+int Rtc::time_get(struct rtc_time* time) {
   if (!device_is_ready(rtc_dev)) {
     return -ENODEV;
   }
@@ -98,7 +98,7 @@ int rtc_time_get(struct rtc_time* time) {
   return 0;
 }
 
-int rtc_time_set(const struct rtc_time* time) {
+int Rtc::time_set(const struct rtc_time* time) {
   LOG_INF("Setting RTC time: %04d-%02d-%02d %02d:%02d:%02d", time->tm_year + 1900, time->tm_mon + 1, time->tm_mday,
           time->tm_hour, time->tm_min, time->tm_sec);
   if (!device_is_ready(rtc_dev)) {
@@ -115,7 +115,7 @@ int rtc_time_set(const struct rtc_time* time) {
   return 0;
 }
 
-int rtc_minute_alarm_enable(void) {
+int Rtc::minute_alarm_enable(void) {
   if (!device_is_ready(rtc_dev)) {
     return -ENODEV;
   }
@@ -126,11 +126,11 @@ int rtc_minute_alarm_enable(void) {
     return ret;
   }
 
-  return rtc_schedule_next_minute_alarm();
+  return schedule_next_minute_alarm();
 }
 
-void rtc_test(void) {
-  if (rtc_init() < 0) {
+void Rtc::test(void) {
+  if (init() < 0) {
     return;
   }
 
@@ -148,13 +148,13 @@ void rtc_test(void) {
   LOG_INF("Setting RTC time: %04d-%02d-%02d %02d:%02d:%02d", set_time.tm_year + 1900, set_time.tm_mon + 1,
           set_time.tm_mday, set_time.tm_hour, set_time.tm_min, set_time.tm_sec);
 
-  if (rtc_time_set(&set_time) < 0) {
+  if (time_set(&set_time) < 0) {
     return;
   }
 
   /* Read back time */
   struct rtc_time get_time;
-  if (rtc_time_get(&get_time) < 0) {
+  if (time_get(&get_time) < 0) {
     return;
   }
 
@@ -163,7 +163,7 @@ void rtc_test(void) {
 
   k_sleep(K_SECONDS(2));
   /* Read back time */
-  if (rtc_time_get(&get_time) < 0) {
+  if (time_get(&get_time) < 0) {
     return;
   }
 

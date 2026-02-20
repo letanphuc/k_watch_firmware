@@ -1,4 +1,4 @@
-#include "power.h"
+#include "power.hpp"
 
 #include <errno.h>
 #include <nrf_fuel_gauge.h>
@@ -9,9 +9,9 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "app.h"
+#include "../app.hpp"
 
-LOG_MODULE_REGISTER(power);
+LOG_MODULE_REGISTER(power_cpp, LOG_LEVEL_INF);
 
 #define PMIC_CHARGER_NODE DT_NODELABEL(pmic_charger)
 
@@ -22,7 +22,7 @@ LOG_MODULE_REGISTER(power);
 static const struct device* const charger_dev = DEVICE_DT_GET(PMIC_CHARGER_NODE);
 static int64_t fuel_gauge_ref_time;
 static bool fuel_gauge_initialized;
-uint32_t battery_percent = 0;
+uint32_t battery_percent_global = 0;
 
 static const struct battery_model battery_model = {
 #include "battery_model.inc"
@@ -106,23 +106,23 @@ static struct k_work_delayable power_report_work;
 
 static void power_report_handler(struct k_work* work) {
   struct power_data data;
-  if (power_read(&data) == 0) {
+  if (Power::instance().read(&data) == 0) {
     LOG_INF("SOC=%u%% IBAT=%d.%03lldmA VBAT=%d.%03dV VBUS=0x%02x CHG=0x%02x", data.battery_percent,
             (int)(sensor_value_to_float_local(&data.ibat) * 1000.0f), (long long)frac_abs(data.ibat.val2 / 1000),
             data.vbat.val1, frac_abs(data.vbat.val2 / 1000), data.vbus_status.val1, data.charger_status.val1);
-    battery_percent = data.battery_percent;
+    battery_percent_global = data.battery_percent;
 
     app_event_t event = {
         .type = APP_EVENT_BATTERY,
-        .value = data.battery_percent,
+        .value = (uint32_t)data.battery_percent,
         .len = 0,
     };
-    app_event_post(&event);
+    App::instance().event_post(&event);
   }
   k_work_reschedule(&power_report_work, K_MINUTES(1));
 }
 
-int power_init(void) {
+int Power::init(void) {
   if (!device_is_ready(charger_dev)) {
     LOG_ERR("PMIC charger device not ready");
     return -ENODEV;
@@ -137,7 +137,7 @@ int power_init(void) {
   return 0;
 }
 
-int power_read(struct power_data* data) {
+int Power::read(struct power_data* data) {
   int ret;
 
   if (data == NULL) {
@@ -210,3 +210,5 @@ int power_read(struct power_data* data) {
 
   return 0;
 }
+
+void Power::test(void) { /* No implementation yet */ }

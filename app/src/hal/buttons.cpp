@@ -1,20 +1,21 @@
+#include "buttons.hpp"
+
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "app.h"
+#include "../app.hpp"
 
-LOG_MODULE_REGISTER(buttons);
+LOG_MODULE_REGISTER(buttons_cpp, LOG_LEVEL_INF);
 
 #define BUTTON_NODE(i) DT_ALIAS(sw##i)
-
 #define BUTTON_SPEC(i) GPIO_DT_SPEC_GET(BUTTON_NODE(i), gpios)
 #define BUTTON_LABEL(i) DT_PROP(BUTTON_NODE(i), label)
 
 #define NUM_BUTTONS 4
 
-static const struct gpio_dt_spec buttons[NUM_BUTTONS] = {
+static const struct gpio_dt_spec buttons_spec[NUM_BUTTONS] = {
     BUTTON_SPEC(0),
     BUTTON_SPEC(1),
     BUTTON_SPEC(2),
@@ -35,18 +36,18 @@ static void button_pressed(const struct device* dev, struct gpio_callback* cb, u
     if (cb == &button_cb_data[i]) {
       app_event_t event = {
           .type = APP_EVENT_BUTTON,
-          .value = i,
+          .value = (uint32_t)i,
           .len = 0,
       };
       LOG_INF("%s / %d pressed", button_labels[i], i);
-      app_event_post(&event);
+      App::instance().event_post(&event);
     }
   }
 }
 
 static int init_button(int idx) {
   int ret;
-  const struct gpio_dt_spec* btn = &buttons[idx];
+  const struct gpio_dt_spec* btn = &buttons_spec[idx];
 
   if (!gpio_is_ready_dt(btn)) {
     LOG_ERR("%s device not ready", button_labels[idx]);
@@ -72,7 +73,7 @@ static int init_button(int idx) {
   return 0;
 }
 
-int buttons_init(void) {
+int Buttons::init(void) {
   int ret;
 
   for (int i = 0; i < NUM_BUTTONS; i++) {

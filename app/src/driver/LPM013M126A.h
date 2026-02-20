@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -94,3 +98,6 @@ void cmlcd_clear_display(void);
 void cmlcd_refresh(void);
 void cmlcd_set_blink_mode(uint8_t mode);
 void cmlcd_set_trans_mode(uint8_t mode);
+#ifdef __cplusplus
+}
+#endif

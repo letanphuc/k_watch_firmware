@@ -1,4 +1,4 @@
-#include "ble.h"
+#include "ble.hpp"
 
 #include <bluetooth/services/ancs_client.h>
 #include <bluetooth/services/cts_client.h>
@@ -17,10 +17,10 @@
 #include <zephyr/storage/flash_map.h>
 #include <zephyr/sys/reboot.h>
 
-#include "ancs_client.h"
-#include "cts_client.h"
+#include "ancs_client.hpp"
+#include "cts_client.hpp"
 
-LOG_MODULE_REGISTER(ble);
+LOG_MODULE_REGISTER(ble_cpp, LOG_LEVEL_INF);
 
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
@@ -52,7 +52,6 @@ static void clear_all_settings() {
 
 static void adv_work_handler(struct k_work* work) {
   int err;
-
   ARG_UNUSED(work);
 
   err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_2, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
@@ -64,7 +63,7 @@ static void adv_work_handler(struct k_work* work) {
   LOG_INF("Advertising successfully started");
 }
 
-static void advertising_start(void) { k_work_submit(&adv_work); }
+void Ble::advertising_start() { k_work_submit(&adv_work); }
 
 static void connected(struct bt_conn* conn, uint8_t err) {
   char addr[BT_ADDR_LE_STR_LEN];
@@ -95,7 +94,7 @@ static void disconnected(struct bt_conn* conn, uint8_t reason) {
   clear_all_settings();
 
   sys_reboot(SYS_REBOOT_COLD);
-  advertising_start();
+  Ble::instance().advertising_start();
 }
 
 static void security_changed(struct bt_conn* conn, bt_security_t level, enum bt_security_err err) {
@@ -112,7 +111,7 @@ static void security_changed(struct bt_conn* conn, bt_security_t level, enum bt_
 
 static void recycled_cb(void) {
   LOG_INF("Connection object available from previous conn. Disconnect is complete!");
-  advertising_start();
+  Ble::instance().advertising_start();
 }
 
 BT_CONN_CB_DEFINE(conn_callbacks) = {
@@ -159,7 +158,7 @@ static struct bt_conn_auth_info_cb conn_auth_info_callbacks = {
     .pairing_failed = pairing_failed,
 };
 
-int ble_init(void) {
+int Ble::init(void) {
   int err;
 
   err = bt_enable(NULL);
@@ -184,13 +183,13 @@ int ble_init(void) {
     return err;
   }
 
-  err = cts_client_init();
+  err = CtsClient::instance().init();
   if (err) {
     LOG_ERR("CTS client init failed (err %d)", err);
     return err;
   }
 
-  err = ancs_client_init();
+  err = AncsClient::instance().init();
   if (err) {
     LOG_ERR("ANCS client init failed (err %d)", err);
     return err;

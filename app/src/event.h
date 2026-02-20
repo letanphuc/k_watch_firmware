@@ -1,6 +1,10 @@
 #ifndef EVENT_H
 #define EVENT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <zephyr/kernel.h>
 
@@ -21,5 +25,9 @@ typedef struct {
   };
   size_t len;
 } app_event_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EVENT_H */
