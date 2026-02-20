@@ -4,6 +4,7 @@ ui.c
 components/ui_comp_hook.c
 ui_helpers.c
 images/ui_img_1156340770.c
+images/ui_img_charge_png.c
 images/ui_img_battery_status_4_png.c
 images/ui_img_sun_png.c
 images/ui_img_battery_status_0_png.c

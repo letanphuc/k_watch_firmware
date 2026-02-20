@@ -6,7 +6,7 @@
 #include "../ui.h"
 
 lv_obj_t *uic_batteryIcon;
-lv_obj_t *ui_Screen1 = NULL;lv_obj_t *ui_Container2 = NULL;lv_obj_t *ui_Container6 = NULL;lv_obj_t *ui_Image1 = NULL;lv_obj_t *ui_numNoti = NULL;lv_obj_t *ui_Container7 = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_batteryIcon = NULL;lv_obj_t *ui_TimeContainer = NULL;lv_obj_t *ui_HourLabel = NULL;lv_obj_t *ui_Label4 = NULL;lv_obj_t *ui_MinuteLabel = NULL;lv_obj_t *ui_Container3 = NULL;lv_obj_t *ui_Image2 = NULL;lv_obj_t *ui_Label6 = NULL;lv_obj_t *ui_Container4 = NULL;lv_obj_t *ui_day1 = NULL;lv_obj_t *ui_day2 = NULL;lv_obj_t *ui_day3 = NULL;lv_obj_t *ui_day4 = NULL;lv_obj_t *ui_day5 = NULL;lv_obj_t *ui_day6 = NULL;lv_obj_t *ui_day7 = NULL;
+lv_obj_t *ui_Screen1 = NULL;lv_obj_t *ui_Container2 = NULL;lv_obj_t *ui_Container6 = NULL;lv_obj_t *ui_Image1 = NULL;lv_obj_t *ui_numNoti = NULL;lv_obj_t *ui_Container7 = NULL;lv_obj_t *ui_Image3 = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_batteryIcon = NULL;lv_obj_t *ui_TimeContainer = NULL;lv_obj_t *ui_HourLabel = NULL;lv_obj_t *ui_Label4 = NULL;lv_obj_t *ui_MinuteLabel = NULL;lv_obj_t *ui_Container3 = NULL;lv_obj_t *ui_Image2 = NULL;lv_obj_t *ui_Label6 = NULL;lv_obj_t *ui_Container4 = NULL;lv_obj_t *ui_day1 = NULL;lv_obj_t *ui_day2 = NULL;lv_obj_t *ui_day3 = NULL;lv_obj_t *ui_day4 = NULL;lv_obj_t *ui_day5 = NULL;lv_obj_t *ui_day6 = NULL;lv_obj_t *ui_day7 = NULL;
 // event funtions
 
 // build funtions
@@ -31,6 +31,8 @@ ui_Container6 = lv_obj_create(ui_Container2);
 lv_obj_remove_style_all(ui_Container6);
 lv_obj_set_width( ui_Container6, 75);
 lv_obj_set_height( ui_Container6, 24);
+lv_obj_set_x( ui_Container6, 0 );
+lv_obj_set_y( ui_Container6, 1 );
 lv_obj_set_align( ui_Container6, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container6,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_Container6, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
@@ -60,6 +62,14 @@ lv_obj_set_align( ui_Container7, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container7,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_Container7, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
 lv_obj_remove_flag( ui_Container7, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+ui_Image3 = lv_image_create(ui_Container7);
+lv_image_set_src(ui_Image3, &ui_img_charge_png);
+lv_obj_set_width( ui_Image3, LV_SIZE_CONTENT);  /// 24
+lv_obj_set_height( ui_Image3, LV_SIZE_CONTENT);   /// 24
+lv_obj_set_align( ui_Image3, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Image3, LV_OBJ_FLAG_CLICKABLE );   /// Flags
+lv_obj_remove_flag( ui_Image3, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_Label5 = lv_label_create(ui_Container7);
 lv_obj_set_width( ui_Label5, LV_SIZE_CONTENT);  /// 1
@@ -237,6 +247,7 @@ ui_Container6= NULL;
 ui_Image1= NULL;
 ui_numNoti= NULL;
 ui_Container7= NULL;
+ui_Image3= NULL;
 ui_Label5= NULL;
 uic_batteryIcon= NULL;
 ui_batteryIcon= NULL;

@@ -26,6 +26,7 @@ extern lv_obj_t *ui____initial_actions0;
 
 // IMAGES AND IMAGE SETS
 LV_IMG_DECLARE( ui_img_1156340770);   // assets/icons8-notification-24.png
+LV_IMG_DECLARE( ui_img_charge_png);   // assets/charge.png
 LV_IMG_DECLARE( ui_img_battery_status_4_png);   // assets/battery_status_4.png
 LV_IMG_DECLARE( ui_img_sun_png);   // assets/sun.png
 LV_IMG_DECLARE( ui_img_battery_status_0_png);   // assets/battery_status_0.png

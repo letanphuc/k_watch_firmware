@@ -19,6 +19,7 @@ extern lv_obj_t *ui_Container6;
 extern lv_obj_t *ui_Image1;
 extern lv_obj_t *ui_numNoti;
 extern lv_obj_t *ui_Container7;
+extern lv_obj_t *ui_Image3;
 extern lv_obj_t *ui_Label5;
 extern lv_obj_t *ui_batteryIcon;
 extern lv_obj_t *ui_TimeContainer;
