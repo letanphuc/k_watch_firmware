@@ -10,7 +10,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "app.h"
+#include "event.h"
 
 LOG_MODULE_REGISTER(app_cts_client);
 
@@ -61,7 +61,7 @@ static void apply_current_time(const struct bt_cts_current_time* current_time) {
       .ptr = time_ptr,
       .len = sizeof(struct rtc_time),
   };
-  app_event_post(&event);
+  event_post(&event);
 
   LOG_INF("CTS event posted");
 }

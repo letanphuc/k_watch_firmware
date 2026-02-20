@@ -1,8 +1,8 @@
+#include "model.h"
+
 #include <string.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-
-#include "model.h"
 
 LOG_MODULE_REGISTER(model);
 

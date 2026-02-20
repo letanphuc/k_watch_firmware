@@ -25,6 +25,7 @@ target_sources(app PRIVATE
   src/app.c
   src/app/modes.c
   src/app/model.c
+  src/event.c
   src/app/screens/watchface_screen.c
   src/app/screens/noti_screen.c
   src/driver/LPM013M126A.c

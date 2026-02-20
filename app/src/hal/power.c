@@ -9,7 +9,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "app.h"
+#include "event.h"
 
 LOG_MODULE_REGISTER(power);
 
@@ -117,7 +117,7 @@ static void power_report_handler(struct k_work* work) {
         .value = data.battery_percent,
         .len = 0,
     };
-    app_event_post(&event);
+    event_post(&event);
   }
   k_work_reschedule(&power_report_work, K_MINUTES(1));
 }

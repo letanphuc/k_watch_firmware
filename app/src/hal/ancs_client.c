@@ -19,7 +19,7 @@
 #include <zephyr/sys/atomic.h>
 #include <zephyr/sys/byteorder.h>
 
-#include "app.h"
+#include "event.h"
 
 LOG_MODULE_REGISTER(app_ancs_client);
 
@@ -341,7 +341,7 @@ static void bt_ancs_data_source_handler(struct bt_ancs_client* ancs_c, const str
               .ptr = info_ptr,
               .len = sizeof(ancs_noti_info_t),
           };
-          app_event_post(&event);
+          event_post(&event);
         } else {
           LOG_ERR("Failed to allocate memory for ANCS notification info\n");
           if (noti_info.title) k_free(noti_info.title);

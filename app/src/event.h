@@ -22,4 +22,7 @@ typedef struct {
   size_t len;
 } app_event_t;
 
+int event_post(app_event_t* event);
+int event_get(app_event_t* event, k_timeout_t timeout);
+
 #endif /* EVENT_H */

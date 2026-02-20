@@ -107,18 +107,13 @@ int app_init(void) {
   return 0;
 }
 
-K_MSGQ_DEFINE(app_msgq, sizeof(app_event_t), 10, 4);
-
-int app_event_post(app_event_t* event) {
-  LOG_INF("Posting event type: %u", event->type);
-  return k_msgq_put(&app_msgq, event, K_NO_WAIT);
-}
+// No message queue or posting logic here anymore
 
 uint32_t app_task_handler(void) {
   uint32_t sleep = 1;
   while (1) {
     app_event_t event;
-    while (k_msgq_get(&app_msgq, &event, K_MSEC(sleep)) == 0) {
+    while (event_get(&event, K_MSEC(sleep)) == 0) {
       LOG_INF("Handling event type: %u", event.type);
       if (event.type == APP_EVENT_BLE_ANCS) {
         // App handles notification management first

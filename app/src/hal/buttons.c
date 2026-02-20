@@ -3,7 +3,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "app.h"
+#include "event.h"
 
 LOG_MODULE_REGISTER(buttons);
 
@@ -39,7 +39,7 @@ static void button_pressed(const struct device* dev, struct gpio_callback* cb, u
           .len = 0,
       };
       LOG_INF("%s / %d pressed", button_labels[i], i);
-      app_event_post(&event);
+      event_post(&event);
     }
   }
 }

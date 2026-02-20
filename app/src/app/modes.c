@@ -1,9 +1,10 @@
+#include "modes.h"
+
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "../app.h"
 #include "../driver/LPM013M126A.h"
-#include "modes.h"
+#include "../event.h"
 
 LOG_MODULE_REGISTER(modes, LOG_LEVEL_INF);
 
@@ -17,7 +18,7 @@ static void mode_timer_expiry_fn(struct k_timer* timer_id) {
   app_event_t event = {
       .type = APP_EVENT_MODE_TIMEOUT,
   };
-  app_event_post(&event);
+  event_post(&event);
 }
 
 void modes_init(void) {

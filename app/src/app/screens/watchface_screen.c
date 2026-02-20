@@ -1,3 +1,5 @@
+#include "watchface_screen.h"
+
 #include <lvgl.h>
 #include <zephyr/logging/log.h>
 
@@ -7,7 +9,6 @@
 #include "../modes.h"
 #include "../ui/ui.h"
 #include "noti_screen.h"
-#include "watchface_screen.h"
 
 LOG_MODULE_REGISTER(watchface_screen);
 

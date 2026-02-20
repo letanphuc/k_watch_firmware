@@ -4,7 +4,7 @@
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/logging/log.h>
 
-#include "app.h"
+#include "event.h"
 
 LOG_MODULE_REGISTER(rtc_module);
 
@@ -70,7 +70,7 @@ static void rtc_minute_alarm_cb(const struct device* dev, uint16_t id, void* use
       .type = APP_EVENT_RTC_ALARM,
       .len = 0,
   };
-  app_event_post(&event);
+  event_post(&event);
   rtc_schedule_next_minute_alarm();
 }
 
