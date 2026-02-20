@@ -1,25 +1,27 @@
-#include "power.h"
-
 #include <errno.h>
 #include <nrf_fuel_gauge.h>
 #include <stdbool.h>
 #include <zephyr/device.h>
+#include <zephyr/drivers/mfd/npm13xx.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/drivers/sensor/npm13xx_charger.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
 #include "event.h"
+#include "power.h"
 
 LOG_MODULE_REGISTER(power);
 
 #define PMIC_CHARGER_NODE DT_NODELABEL(pmic_charger)
+#define PMIC_NODE DT_NODELABEL(pmic_main)
 
 #if !DT_NODE_HAS_STATUS(PMIC_CHARGER_NODE, okay)
 #error "pmic_charger node is not okay in devicetree"
 #endif
 
 static const struct device* const charger_dev = DEVICE_DT_GET(PMIC_CHARGER_NODE);
+static const struct device* const pmic_dev = DEVICE_DT_GET(PMIC_NODE);
 static int64_t fuel_gauge_ref_time;
 static bool fuel_gauge_initialized;
 uint32_t battery_percent = 0;
@@ -104,6 +106,13 @@ static int fuel_gauge_update_percent(struct power_data* data) {
 
 static struct k_work_delayable power_report_work;
 
+static void pmic_event_callback(const struct device* dev, struct gpio_callback* cb, uint32_t events) {
+  LOG_INF("PMIC event: 0x%08x", events);
+  k_work_reschedule(&power_report_work, K_NO_WAIT);
+}
+
+static struct gpio_callback pmic_event_cb;
+
 static void power_report_handler(struct k_work* work) {
   struct power_data data;
   if (power_read(&data) == 0) {
@@ -135,6 +144,12 @@ int power_init(void) {
 
   LOG_INF("PMIC charger ready: %s", charger_dev->name);
   fuel_gauge_initialized = false;
+
+  if (device_is_ready(pmic_dev)) {
+    gpio_init_callback(&pmic_event_cb, pmic_event_callback, 0xffffffff);
+    mfd_npm13xx_add_callback(pmic_dev, &pmic_event_cb);
+    LOG_INF("PMIC event callback added");
+  }
 
   k_work_init_delayable(&power_report_work, power_report_handler);
   k_work_reschedule(&power_report_work, K_NO_WAIT);

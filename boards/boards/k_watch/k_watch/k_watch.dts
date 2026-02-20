@@ -116,6 +116,8 @@
 	pmic_main: npm1300@6b {
 		compatible = "nordic,npm1300";
 		reg = <0x6b>;
+		host-int-gpios = <&gpio1 15 GPIO_ACTIVE_LOW>;
+		pmic-int-pin = <1>;
 
 		pmic_charger: charger {
 			compatible = "nordic,npm1300-charger";
