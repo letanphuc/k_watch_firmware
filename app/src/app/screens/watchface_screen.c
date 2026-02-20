@@ -57,7 +57,10 @@ static void watchface_handle_rtc_alarm(app_event_t* event) {
 }
 
 static void watchface_handle_battery(app_event_t* event) {
-  uint32_t percent = event->value;
+  uint32_t value = event->value;
+  uint8_t percent = value & 0xFF;
+  bool is_charging = (value >> 8) & 0x01;
+
   int battery_index = percent / 20;
   if (battery_index > 5) {
     battery_index = 5;
@@ -70,9 +73,15 @@ static void watchface_handle_battery(app_event_t* event) {
       &ui_img_battery_status_4_png,  // 80%
       &ui_img_battery_status_5_png,  // full
   };
-  LOG_INF("Battery percent: %u, index: %d", percent, battery_index);
+  LOG_INF("Battery percent: %u, charging: %d, index: %d", percent, is_charging, battery_index);
   lv_img_set_src(ui_batteryIcon, battery_icons[battery_index]);
   lv_label_set_text_fmt(ui_Label5, "%u%%", percent);
+
+  if (is_charging) {
+    lv_obj_remove_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
+  } else {
+    lv_obj_add_flag(ui_Image3, LV_OBJ_FLAG_HIDDEN);
+  }
 }
 
 static void watchface_handle_button(app_event_t* event) {

@@ -107,14 +107,19 @@ static struct k_work_delayable power_report_work;
 static void power_report_handler(struct k_work* work) {
   struct power_data data;
   if (power_read(&data) == 0) {
-    LOG_INF("SOC=%u%% IBAT=%d.%03lldmA VBAT=%d.%03dV VBUS=0x%02x CHG=0x%02x", data.battery_percent,
-            (int)(sensor_value_to_float_local(&data.ibat) * 1000.0f), (long long)frac_abs(data.ibat.val2 / 1000),
-            data.vbat.val1, frac_abs(data.vbat.val2 / 1000), data.vbus_status.val1, data.charger_status.val1);
+    uint8_t chg_stat = data.charger_status.val1 & 0x07;
+    bool is_charging = (chg_stat >= 1 && chg_stat <= 3);
+
+    LOG_INF("SOC=%u%% IBAT=%d.%03lldmA VBAT=%d.%03dV VBUS=0x%02x CHG=0x%02x (stat=0x%02x, charging=%d)",
+            data.battery_percent, (int)(sensor_value_to_float_local(&data.ibat) * 1000.0f),
+            (long long)frac_abs(data.ibat.val2 / 1000), data.vbat.val1, frac_abs(data.vbat.val2 / 1000),
+            data.vbus_status.val1, data.charger_status.val1, chg_stat, is_charging);
+
     battery_percent = data.battery_percent;
 
     app_event_t event = {
         .type = APP_EVENT_BATTERY,
-        .value = data.battery_percent,
+        .value = (is_charging << 8) | (data.battery_percent & 0xFF),
         .len = 0,
     };
     event_post(&event);
